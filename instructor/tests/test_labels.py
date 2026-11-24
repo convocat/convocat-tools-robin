@@ -41,7 +41,7 @@ def run(monkeypatch, label):
     client = FakeClient()
     result = robin.handle_turn("Can I return a vase?", [], client=client, label=label, guardrails={
         "bank_account": False, "injection": False, "facts": False})
-    return result, client.calls[0]["messages"][0]["content"]
+    return result, client.calls[0]["system"]
 
 
 robin_get_client = robin.get_client

@@ -5,7 +5,7 @@ during live-coding and as a handout for students who want to try these at home.
 
 ## A. Example live-coding prompts for the dashboard
 
-Prompts to type into Claude Code against `dashboard-kit/`, roughly easy → harder. Each one is a
+Prompts to type into Claude Code against `instructor/dashboard-kit/`, roughly easy → harder. Each one is a
 real, scoped change, not a toy example.
 
 1. "Add a language toggle (NL/EN) that switches all dashboard labels, without touching the
@@ -48,16 +48,17 @@ each time:
 
 ## What's live right now, for the demo
 
-- `dashboard-kit/` — the Product Owner / conversation-log dashboard, reusing the
+- `instructor/dashboard-kit/` — the Product Owner / conversation-log dashboard, reusing the
   Mai Montferland `dashboard-kit` pattern, adapted to pull real traces from Langfuse
-  (`dashboard-kit/robin_adapter.py`) instead of Flowise exports.
+  (`instructor/dashboard-kit/robin_adapter.py`) instead of Flowise exports.
 - Conversations expand **inline** in the log table (no popup). Each expanded conversation is
-  rendered by `dashboard-kit/thread-view/`, a small `@assistant-ui/react` app — the same
+  rendered by `instructor/dashboard-kit/thread-view/`, a small `@assistant-ui/react` app — the same
   primitives (`ThreadPrimitive`, `MessagePrimitive`) as Robin's own chat widget and the
   Montferland `agent-frontend`.
 - Retrieved chunks show as colored chips under Robin's answer when look-up (RAG) was on — green
   ≥0.5 similarity, orange below, the same threshold convention as the Montferland debug panel's
   RAG Scores.
 - Two Langfuse experiment runs exist for the full 51-item test set with look-up on: guardrails on
-  and guardrails off, both on GPT-6 Sol.
+  and guardrails off, both on GPT-6 Sol - those runs predate the move to Claude, so their model
+  differs from what Robin runs today.
 

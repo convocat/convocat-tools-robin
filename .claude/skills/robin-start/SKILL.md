@@ -18,8 +18,8 @@ A `200` means something is serving there. Confirm it's Robin: the page title is 
 ## Step 2 — Check prerequisites
 
 1. **Virtual environment:** `.venv/Scripts/python.exe` must exist. If it's missing, create it (`python -m venv .venv`) and run `.venv/Scripts/python.exe -m pip install -r requirements.txt`.
-2. **Packages:** run `.venv/Scripts/python.exe -c "import flask, waitress, langfuse, openai, dotenv"`. If that fails, run `.venv/Scripts/python.exe -m pip install -r requirements.txt`.
-3. **Keys:** `.env` must exist at the repo root with at least `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and `LANGFUSE_BASE_URL` filled in. Check only the key *names* — never print the values. If `.env` or a key is missing, tell Maaike which one and stop; never guess or invent values. (`.env.example` is the template.)
+2. **Packages:** run `.venv/Scripts/python.exe -c "import flask, waitress, langfuse, anthropic, openai, dotenv"`. If that fails, run `.venv/Scripts/python.exe -m pip install -r requirements.txt`.
+3. **Keys:** `.env` must exist at the repo root with at least `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and `LANGFUSE_BASE_URL` filled in. Check only the key *names* — never print the values. If `.env` or a key is missing, tell Maaike which one and stop; never guess or invent values. (`.env.example` is the template.)
 
 ## Step 3 — Start Robin
 
@@ -40,5 +40,5 @@ She opens it herself; only open the browser pane if she asks to see it.
 
 ## Notes
 
-- The page is `public/index.html`, built from `widget/`. After changing the widget, run `npm install` and `npm run build` inside `widget/`, then refresh the browser — no restart needed. Changes to Python files (`app.py`, `robin.py`, `prompts.py`, …) do need a restart: waitress has no auto-reload.
+- The page is `public/index.html`, built from `instructor/widget/`. After changing the widget, run `npm install` and `npm run build` inside `instructor/widget/`, then refresh the browser — no restart needed. Changes to Python files (`app.py`, `robin.py`, `prompts.py`, …) do need a restart: waitress has no auto-reload.
 - Prompts come from Langfuse (label `production`); on the first run Robin creates any missing prompts from `prompts.py`.

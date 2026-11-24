@@ -6,7 +6,7 @@ description: "Generate test items for a chatbot's system prompt + policy doc, sh
 # robin-test-case-generator — build an eval dataset shaped like robin-dataset.json
 
 Given a system prompt and the policy/knowledge doc(s) it's grounded in (pass a path, or paste
-them), generate test items in the exact shape `experiments/robin-dataset.json` already uses in
+them), generate test items in the exact shape `instructor/experiments/robin-dataset.json` already uses in
 this repo, so they plug straight into `run_experiment.py --upload` or any other Langfuse-dataset
 eval without reshaping.
 
@@ -73,6 +73,6 @@ bank-account items; one that never takes multi-turn input needs none.
 ## Output
 
 Write the generated items to a file (ask where if it's not obvious — e.g. alongside
-`experiments/robin-dataset.json` with a distinct name) as a JSON array of items in the shape
+`instructor/experiments/robin-dataset.json` with a distinct name) as a JSON array of items in the shape
 above, not inline in chat — this is meant to be used, not just read once. Report the category
 breakdown you actually produced so it can be checked against what was asked for.

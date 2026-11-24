@@ -13,7 +13,9 @@ services:
     envVars:
       - key: PYTHON_VERSION   # Langfuse needs Python 3.11 or newer
         value: 3.13.5
-      - key: OPENAI_API_KEY
+      - key: ANTHROPIC_API_KEY   # Robin's answers and the guardrails
+        sync: false
+      - key: OPENAI_API_KEY      # embeddings for the look-up only
         sync: false
       - key: LANGFUSE_PUBLIC_KEY
         sync: false
@@ -24,11 +26,11 @@ services:
       - key: COURSE_PASSCODE
         sync: false
       - key: ROBIN_MODEL
-        value: gpt-6-sol
+        value: claude-sonnet-5-5
       - key: COMPARE_MODEL
-        value: gpt-4.1-mini
+        value: claude-haiku-5-5
       - key: GUARDRAIL_MODEL
-        value: gpt-6-luna
+        value: claude-haiku-5-5
       - key: GUARDRAIL_EFFORT
         value: low
       - key: MAX_MESSAGES_PER_CHAT

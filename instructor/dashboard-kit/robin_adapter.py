@@ -22,7 +22,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / ".env")
 
 PUB = os.environ["LANGFUSE_PUBLIC_KEY"]
@@ -51,9 +51,9 @@ SECTION_HIT = re.compile(r"([^,(]+?)\s*\(([\d.]+)\)")
 def load_handbook_snippets() -> dict[str, str]:
     """Section heading -> first ~160 characters of its body, for the Bronnen panel.
 
-    Mirrors how lookup.split_into_chunks cuts content/handbook.md: one chunk per '## ' heading.
+    Mirrors how lookup.split_into_chunks cuts source-docs/handbook.md: one chunk per '## ' heading.
     """
-    text = (ROOT / "content" / "handbook.md").read_text(encoding="utf-8")
+    text = (ROOT / "source-docs" / "handbook.md").read_text(encoding="utf-8")
     snippets = {}
     for heading, body in re.findall(r"^##[ \t]+([^\n]+)\n([\s\S]*?)(?=\n##[ \t]|\Z)", text, re.M):
         clean = re.sub(r"\s+", " ", body).strip()

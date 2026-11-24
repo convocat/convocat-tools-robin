@@ -5,26 +5,30 @@ Robin is the customer service assistant of Nest & Co, an invented online homewar
 - **A real chatbot widget** on a demo shop page: a chat bubble bottom right, built with [assistant-ui](https://www.assistant-ui.com).
 - **System prompt:** Robin's behavior, written upfront (in `prompts.py`).
 - **Input guardrails:** bank account numbers are removed by a pattern check (no LLM), and prompt injection is caught by a small model.
-- **The LLM call:** GPT-6 Sol, with a switch to GPT-4.1 mini for comparison, and a reasoning effort setting.
+- **The LLM call:** Claude Sonnet 5.5, with a switch to Claude Haiku 5.5 for comparison, and an effort setting.
 - **Output guardrail:** a small model checks that every fact is in the return policy. If not, Robin tries once more, and otherwise gives a fixed, honest answer.
 - **Observability:** every message becomes a readable trace in Langfuse.
-- **Evals:** ready-made LLM-as-a-Judge prompts in `EVALUATORS.md`.
+- **Evals:** ready-made LLM-as-a-Judge prompts in `instructor/EVALUATORS.md`.
 
-Robin runs on **Render** or **Vercel**. Same code, same traces: pick one, or try both and compare.
+Robin runs on **Render**.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/convocat/Robin) [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/clone?repository-url=https%3A%2F%2Fgithub.com%2Fconvocat%2FRobin&env=OPENAI_API_KEY%2CLANGFUSE_PUBLIC_KEY%2CLANGFUSE_SECRET_KEY%2CLANGFUSE_BASE_URL%2CCOURSE_PASSCODE&envDefaults=%7B%22LANGFUSE_BASE_URL%22%3A%20%22https%3A%2F%2Fcloud.langfuse.com%22%7D&envDescription=Your%20OpenAI%20API%20key%2C%20the%20public%20and%20secret%20key%20of%20your%20Langfuse%20project%20%28Settings%20%3E%20API%20Keys%29%2C%20the%20Langfuse%20region%20URL%2C%20and%20a%20passcode%20for%20participants.&envLink=https%3A%2F%2Fgithub.com%2Fconvocat%2FRobin%23what-you-need&project-name=robin&repository-name=robin)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/convocat/convocat-tools-robin)
 
-*(These buttons deploy the course version from `convocat/Robin`. In your own copy, change `convocat/Robin` in both links to your GitHub name and repository.)*
+*(This button deploys the course version from `convocat/convocat-tools-robin`. In your own copy, change that name in the link to your own GitHub name and repository.)*
 
 ## What you need
 
-- An **OpenAI API key** with access to GPT-6 Sol, GPT-6 Luna and GPT-4.1 mini. Set a monthly spending limit in your OpenAI account.
+- An **Anthropic API key** for Claude, which writes the answers and runs the guardrails. Get it at
+  [platform.claude.com](https://platform.claude.com) and set a spending limit. **A Claude Pro or Max
+  subscription is not an API key** — the API is billed separately from it.
+- An **OpenAI API key**, used only to turn text into embeddings for the look-up (RAG). Claude has no
+  embeddings model, so a RAG bot on Claude needs a second service for this. It costs cents.
 - A **Langfuse project** and its API keys (Settings > API Keys). Langfuse Cloud has a free tier.
-- A free **GitHub** account, and a free **Render** or **Vercel** account.
+- A free **GitHub** account and a free **Render** account.
 
-Both buttons ask for the same values: your OpenAI key, your two Langfuse keys, the Langfuse URL (`https://cloud.langfuse.com` for the EU region) and a course passcode, a word you give participants in the session.
+The button asks for: your Anthropic key, your OpenAI key, your two Langfuse keys, the Langfuse URL (`https://cloud.langfuse.com` for the EU region) and a course passcode, a word you give participants in the session.
 
-## Option 1: Render
+## Deploy to Render
 
 1. Click **Deploy to Render** and sign in (you can sign in with GitHub).
 2. Fill in the values Render asks for. The other settings are already filled in by `render.yaml`.
@@ -35,28 +39,48 @@ Good to know:
 - **Updating:** Render doesn't pick up changes on GitHub automatically. Click **Manual Deploy > Deploy latest commit**.
 - Robin runs in Render's EU region (Frankfurt).
 
-## Option 2: Vercel
+## For course participants: installing your own Robin
 
-1. Click **Deploy with Vercel** and sign in. Vercel makes a copy of the repository in your GitHub account.
-2. Fill in the values Vercel asks for, and click **Deploy**. After a minute or two, Vercel shows a link like `https://robin-xxxx.vercel.app`.
+**The short version: clone this repository, open the folder in Claude Code, and type
+`/robin-install`.** The skill walks the whole thing — Python, the packages, your own Langfuse
+project, your keys, a check that the whole chain really works, and the deploy to Render — and
+checks each step instead of assuming it. It never asks you to paste a key into the chat: keys go
+into your `.env` file, which is never uploaded anywhere.
 
-Good to know:
-- **Vercel runs Robin as functions:** every message starts the API, gets an answer, and stops. There's no sleeping server, but the first message after a quiet spell can take a few seconds longer.
-- **Vercel's free (Hobby) plan is for personal, non-commercial use only.** Vercel defines commercial use broadly, so a bot used in a paid course probably needs the Pro plan. A student's own practice copy fits the free plan. If in doubt, ask Vercel support.
-- **Updating:** every change pushed to GitHub is deployed automatically.
-- Robin's API runs in Vercel's Frankfurt region (`fra1`, set in `vercel.json`).
+What you need before you start, and it is worth reading this list once:
 
-## For students who want their own Robin
+| What | For | Note |
+|---|---|---|
+| Claude Code (Pro or Max) | running the install | |
+| A free Langfuse account | your traces | Yours to keep after the course |
+| An Anthropic API key | Robin's answers and guardrails | **Pro/Max is not an API key** — the API is billed separately, so put a little credit on it and set a spending limit |
+| An OpenAI API key | embeddings for the look-up only | Claude has no embeddings model; this costs cents |
+| A free Render account | putting Robin online | Optional: Robin runs locally too |
 
-**To run your own Robin on Render, you don't need a copy of the code.** Click **Deploy to Render** at the top of this page, sign in, and fill in your own keys and passcode. Render builds Robin straight from this public repository. Robin's prompts live in your own Langfuse project, so you can still change them.
+You need **no database**: the look-up searches `data/chunks.json`, which is committed, so a fresh
+clone can search straight away.
 
-**To change the code as well**, make your own copy first:
+**To check an install, now or later:**
+
+```bash
+.venv/Scripts/python.exe check_install.py
+```
+
+It verifies each service answers, then sends one real message and reads the trace back out of
+Langfuse — confirming the guardrail steps are in it and your prompts were created. That is the
+check that matters: an answer on screen only proves the model replied. Add `--no-chat` to skip the
+message and its cost.
+
+**If you'd rather not copy the code at all**, click **Deploy to Render** at the top of this page
+and fill in your own keys. Render builds Robin straight from this public repository, and Robin's
+prompts still live in your own Langfuse project, so you can change them. You just can't change the
+code.
+
+**To change the code too**, make your own copy first:
 
 1. On GitHub, click **Fork** at the top of this repository.
-2. In **your** copy's README, change `convocat/Robin` in the button links to your GitHub name and repository.
-3. Click a button and follow the steps above, with your own keys.
-
-The Vercel button always makes a copy in your own GitHub account.
+2. In **your** copy's README, change `convocat/convocat-tools-robin` in the button link to your GitHub name and repository.
+3. Click the button and follow the steps above, with your own keys.
 
 ## Using Robin
 
@@ -71,7 +95,7 @@ What changes:
 - A switched-off guardrail doesn't appear in the trace tree. With all three off, the tree shows only `3. Robin writes the answer` (the step numbers stay the same, so traces are easy to compare).
 - It gets no score, and the turn's metadata lists it under `guardrails_switched_off`.
 - Each trace gets one of the tags `guardrails: all on`, `guardrails: some off` or `guardrails: all off`, so you can filter on them.
-- With bank account numbers off, a bank account number goes to OpenAI and Langfuse exactly as typed. Use made-up numbers only.
+- With bank account numbers off, a bank account number goes to the model and Langfuse exactly as typed. Use made-up numbers only.
 
 **On a first visit, all three guardrails are off**, so participants first see Robin with the system prompt alone, and then switch guardrails on. The browser remembers each person's switches after that. (The API itself treats any guardrail the browser doesn't mention as on.)
 
@@ -90,37 +114,66 @@ Under **Look-up (RAG)** in the course panel, you can switch on **Look things up 
 
 It's off by default, so Robin behaves as before until you switch it on.
 
-It works in two separate parts, like the course slide "DocBot: from question to answer":
+It works in two separate parts, like the course slide "from question to answer".
 
-**The ingestion pipeline** (`ingestion/ingest_handbook.py`) puts the handbook into the database. It runs separately from Robin, whenever the handbook changes:
+#### The corpus is `source-docs/`
 
-1. **Get the handbook:** the `production` version of the prompt `robin/handbook` in Langfuse. The handbook lives there like any other prompt, with its version history. (The starting version is `content/handbook.md`.)
-2. **Preprocess:** tidy the text.
-3. **Chunk:** cut it into chunks, one per section.
-4. **Embed:** turn every chunk into an embedding, a list of numbers that captures its meaning (OpenAI `text-embedding-3-small`).
-5. **Store:** replace the old chunks in the table `handbook_chunks` in the content database (Postgres with pgvector).
+The documents Robin can look things up in are the markdown files in `source-docs/` — the same files the help centre publishes at `/help`. Editing one there and re-running the ingestion is the whole content workflow: no database admin, and git keeps the history.
 
-Each run shows up in Langfuse as the trace "Ingestion – customer handbook", in the environment `ingestion`.
+Not every document has to be published. `help_pages.py` decides that separately, so Robin can be given a document the website doesn't show — an internal playbook, for instance.
 
-**Robin's look-up** only searches the database. With the look-up on, a turn shows two extra steps before `3. Robin writes the answer`:
+**The documents disagree with each other, on purpose.** See "Design choices" below: the free-shipping threshold is €50 in two places and €75 in two others. Ask the look-up "when do I get free shipping?" and the top three chunks come back within 0.004 of each other, two of them contradicting the third. That is the lesson — retrieval working correctly and the answer still being unreliable.
+
+#### The ingestion pipeline
+
+`ingestion/ingest_source_docs.py` puts the documents into the content store. It runs separately from Robin, whenever a document changes:
+
+1. **Read the documents:** every markdown file in `source-docs/`.
+2. **Preprocess:** tidy the text, and fingerprint the corpus (a short hash of the documents).
+3. **Chunk:** cut each document into chunks, one per section.
+4. **Embed:** turn every chunk into an embedding, a list of numbers that captures its meaning (OpenAI `text-embedding-3-small` — this is the one step that is not Claude, because Anthropic has no embeddings model).
+5. **Store:** replace everything in the content store.
+
+Each run shows up in Langfuse as the trace "Ingestion - source documents", in the environment `ingestion`.
+
+Run it with `python ingestion/ingest_source_docs.py`. The corpus is currently 3 documents and 39 chunks.
+
+#### Two content stores, chosen by one setting
+
+Which store is used depends only on whether `DATABASE_URL` is set:
+
+| `DATABASE_URL` | Store | Who this is for |
+|---|---|---|
+| not set | `data/chunks.json`, committed to this repo | **Students.** No database to pay for or provision, and the chunks travel with a clone. Searching 39 chunks in Python is instant. |
+| set | Postgres with pgvector | **The instructor-hosted Robin**, so the course can point at a real vector database. |
+
+Both produce the same trace, so an exercise about reading a retrieval span works either way. After changing a document on the file store, re-run the ingestion and commit the new `data/chunks.json` — Robin only knows what was last ingested.
+
+**The trace says when the chunks are stale.** The chunks file stores the corpus fingerprint, so the `Look-up 2` span carries `matches_source`: `false` means somebody edited a document and didn't re-run the ingestion, and Robin is answering from text the repo no longer holds. (The database store keeps no fingerprint, so there it is empty rather than a guess.)
+
+#### What a turn looks like with the look-up on
+
+Two extra steps appear before `3. Robin writes the answer`:
 
 - `Look-up 1 – rewrite the question into a search query`: a small model turns the message, plus the conversation so far, into a search query (prompt `robin/query-rewrite`).
-- `Look-up 2 – search the content database`: the query becomes an embedding, and the database returns the closest chunks. Open it to see the query, the chunks found and how similar each one was (1 is the same meaning, 0 is unrelated), plus the handbook version and when it was ingested.
+- `Look-up 2 – search the content database`: the query becomes an embedding, and the store returns the closest chunks. Open it to see the query, which document and section each chunk came from and how similar it was (1 is the same meaning, 0 is unrelated), plus which store answered, the corpus fingerprint, when it was ingested, and whether it still matches `source-docs/`.
 
-**To see every chunk in the database,** open `/chunks` on Robin's site (for example `https://robin-xxxx.onrender.com/chunks`), or click "See the chunks in the content database" in the course panel. It shows each chunk's text and the first numbers of its embedding, behind the course passcode. The ingestion trace in Langfuse shows the chunks too, under step "3. Chunk".
+**To see every chunk,** open `/chunks` on Robin's site (for example `https://robin-xxxx.onrender.com/chunks`), or click "See the chunks in the content database" in the course panel. It shows each chunk's text and the first numbers of its embedding, behind the course passcode. The ingestion trace in Langfuse shows the chunks too, under step "3. Chunk".
 
 Robin then answers with those chunks in its system prompt (`robin/system-prompt-lookup`), and the facts check compares the answer with the same chunks (`robin/facts-check-lookup`). Every trace gets the tag `look-up: on` or `look-up: off`.
 
-#### Setting up the content database (once)
+#### Setting up the Postgres store (only for the instructor-hosted Robin)
+
+Students don't need this: without `DATABASE_URL`, Robin uses the committed file.
 
 1. In the Render dashboard, click **New > Postgres**. Pick the same region as Robin (Frankfurt) and a paid plan, so the database doesn't expire. pgvector is included; the ingestion switches it on.
 2. In Robin's web service, under **Environment**, add `DATABASE_URL` with the database's **Internal Database URL** (from the database's **Info** page). Save; Render redeploys Robin.
 3. In GitHub, under **Settings > Secrets and variables > Actions**, add the secret `DATABASE_URL` with the database's **External Database URL**.
-4. Under **Actions > Ingest the handbook**, click **Run workflow**.
+4. Under **Actions > Ingest the source documents**, click **Run workflow**.
 
-Repeat step 4 after every change to the handbook in Langfuse: Robin only knows the version that was last ingested.
+Repeat step 4 after every change to a document: Robin only knows the version that was last ingested.
 
-## Run Robin on your own computer## Run Robin on your own computer
+## Run Robin on your own computer
 
 You need Python 3.11 or newer.
 
@@ -165,7 +218,7 @@ Because the trace contains guardrail and agent steps, Langfuse also draws it as 
 
 **A guardrail step's output is just its result:** PASS, BLOCK, MASKED or ERROR. So in a table of steps, the Output column shows at a glance which guardrail fired. The small-model call inside it (`Injection check (small model)`, `Facts check (small model)`) shows what the model actually answered.
 
-**The turn itself carries a summary** in its metadata, starting with `outcome` and `what_happened` (one sentence), then `step_1_bank_account_check`, `step_2_injection_check`, `step_4_facts_check`, `rewrite_needed`, `guardrails_switched_off`, and the settings: `robin_model`, `reasoning_effort` and `guardrail_model`. These sit on the turn only, not on every step.
+**The turn itself carries a summary** in its metadata, starting with `outcome` and `what_happened` (one sentence), then `step_1_bank_account_check`, `step_2_injection_check`, `step_4_facts_check`, `rewrite_needed`, `guardrails_switched_off`, and the settings: `robin_model`, `effort` and `guardrail_model`. These sit on the turn only, not on every step.
 
 The model calls (steps 3 and 5, and the small-model checks) are **linked to their prompt** in Langfuse, with its version number. Click the prompt name to open it.
 
@@ -203,7 +256,7 @@ Robin's prompts live in Langfuse's **Prompt Management**, in the folder `robin/`
 | Input / Output | The customer's message and Robin's final answer, as plain text |
 | User | The name or nickname the participant typed, so everyone can find their own chats |
 | Session | One ID per chat window. Open the **Sessions** view to read a whole conversation |
-| Tags | `robin` and the model, such as `model: gpt-6-sol`. Filter on this to compare models |
+| Tags | `robin` and the model, such as `model: claude-sonnet-5-5`. Filter on this to compare models |
 | Scores | `outcome` and `user feedback` on the turn; each `guardrail:` score on its own guardrail step; your `eval:` scores |
 | Metadata | On the turn: `outcome` first, then the step results and settings. On a guardrail step: `result` first |
 | Latency / Cost | How long a turn took, and its token cost (cost only appears once Langfuse knows the model's price) |
@@ -212,10 +265,10 @@ All traces are sent with the environment `course`, so they're easy to keep apart
 
 ## Privacy and costs
 
-- Bank account numbers are removed **before** anything is sent to OpenAI or Langfuse. Other personal data is not. Ask participants not to type real personal details.
+- Bank account numbers are removed **before** anything is sent to Anthropic, OpenAI or Langfuse. Other personal data is not. Ask participants not to type real personal details.
 - The participant's nickname is stored in Langfuse as the user. Tell participants this, as the course settings panel does.
-- Robin runs in the EU (Render Frankfurt, or Vercel's Frankfurt region `fra1`), but conversations are sent to OpenAI and to Langfuse. Choose Langfuse's EU region (`https://cloud.langfuse.com`) to keep traces in the EU.
-- Each chat is limited to 40 messages (`MAX_MESSAGES_PER_CHAT`). The conversation is kept in the browser, so a determined participant could get around this limit: set spending limits at OpenAI (and in Vercel, if you use it) rather than relying on it. Most messages make three model calls: two on the small Luna model and one on Robin's model. A retry after a blocked answer adds two more. A blocked injection attempt costs only one small call.
+- Robin runs in the EU (Render's Frankfurt region), but conversations are sent to Anthropic, to OpenAI (the search query only, for its embedding) and to Langfuse. Choose Langfuse's EU region (`https://cloud.langfuse.com`) to keep traces in the EU.
+- Each chat is limited to 40 messages (`MAX_MESSAGES_PER_CHAT`). The conversation is kept in the browser, so a determined participant could get around this limit: set spending limits at Anthropic rather than relying on it. Most messages make three model calls: two on Claude Haiku 5.5 and one on Robin's model. A retry after a blocked answer adds two more. A blocked injection attempt costs only one small call. At Haiku's and Sonnet's prices a turn costs well under a cent, so a whole cohort is a few euros.
 
 ## Design choices you can discuss with participants
 
@@ -224,13 +277,14 @@ These are deliberate, so participants can find and improve them:
 - **No handover path.** Robin's system prompt doesn't say what to do when the policy has no answer. Only the facts check fallback offers a colleague.
 - **No date.** Robin doesn't know today's date, so it can't really check the 30-day window. A better design passes the date in, or lets code calculate it.
 - **Gaps in the policy.** Does a return with one damaged and one unused item cost €4.95? The policy doesn't say.
+- **The source documents contradict each other.** The free-shipping threshold is €50 in two places and €75 in two others, and the handbook's own changelog shows why: it was raised from €50 to €75 and the update was only half applied. This is deliberate. Contradictory information across documents is what happens in real life, and different people work from different handbooks — so a look-up answer depends on which chunk came back, and no amount of prompt engineering fixes an unreliable source. Ask participants which document they would trust, how they would notice that two chunks disagree, and whose job it is to fix it.
 - **Fail open vs fail closed.** If the injection check fails, the message is let through. If the facts check fails, the answer is not sent. Which is right for which guardrail?
 
 ## Changing Robin
 
 - **Prompts:** edit them in Langfuse (see "Prompts in Langfuse" above). The fixed fallback messages, and the starting versions of the prompts, are in `prompts.py`.
-- **Models:** the environment variables `ROBIN_MODEL`, `COMPARE_MODEL`, `GUARDRAIL_MODEL` and `GUARDRAIL_EFFORT`, in your Render or Vercel project settings (redeploy afterwards). Check the exact model names in your OpenAI account: the defaults are `gpt-6-sol`, `gpt-4.1-mini` and `gpt-6-luna`. GPT-4.1 mini leaves the OpenAI API on January 14, 2027.
-- **The chat widget:** the source is in `widget/` (React with assistant-ui). After changing it, run `npm install` and `npm run build` inside `widget/`. That rebuilds `public/index.html`, the single page that Render and Vercel serve. `npm run build:preview` makes a version with scripted answers, for showing the design without keys.
+- **Models:** the environment variables `ROBIN_MODEL`, `COMPARE_MODEL`, `GUARDRAIL_MODEL` and `GUARDRAIL_EFFORT`, in your Render project settings (redeploy afterwards). The defaults are `claude-sonnet-5-5` for Robin and `claude-haiku-5-5` for both the comparison and the guardrails. `GUARDRAIL_EFFORT` and the course panel's effort setting take `low`, `medium`, `high`, `xhigh` or `max`; every Claude model accepts one, so the setting applies to both models in the switch.
+- **The chat widget:** you don't need to. `public/index.html` is the built widget, committed and ready to deploy. To restyle it, the source is in `instructor/widget/` (React with assistant-ui): run `npm install` and `npm run build` there. That rebuilds `public/index.html`, the single page Render serves. `npm run build:preview` makes a version with scripted answers, for showing the design without keys.
 - **Logic and tracing:** `robin.py`.
 
 ## Files
@@ -242,13 +296,11 @@ New to the code? [`REPO_GUIDE.md`](REPO_GUIDE.md) is a fuller map of the repo, w
 | `app.py` | Robin's API: `/api/chat` and `/api/feedback`. Also serves the chat page |
 | `robin.py` | One chat turn: guardrails, the LLM call, and the Langfuse trace |
 | `prompts.py` | All the text: system prompt, guardrail prompts, fallback messages |
-| `public/index.html` | The demo shop page with the chat widget (built from `widget/`) |
-| `widget/` | Source of the chat widget and the shop page |
-| `EVALUATORS.md` | Eval prompts to paste into Langfuse |
+| `public/index.html` | The demo shop page with the chat widget. Committed pre-built, so deploying needs no Node |
+| `source-docs/` | The documents Robin can look things up in, and the help centre's pages |
 | `render.yaml` | Tells Render how to run Robin |
-| `vercel.json` | Tells Vercel how to run Robin |
 | `requirements.txt` | Python packages |
 | `.env.example` | Template for your keys when running locally |
-| `tests/` | Offline tests with a fake model (`python -m pytest tests`) |
-| `experiments/` | A 51-item dataset for Langfuse experiments, and a script that runs Robin on it with a chosen model and guardrail setting. See `experiments/README.md` |
-| `tests/bank_account_cases.csv` | The bank account test set: 17 messages that must be masked, must stay, or are known gaps. Paste them into Robin, or run them with `python -m pytest tests/test_bank_accounts.py` |
+| `check_install.py` | Checks an install end to end: the services, the corpus, and one real message whose trace is read back out of Langfuse |
+| `instructor/` | Everything a student never needs: the widget source, the experiment set and runner, the judge prompts and the offline tests. Kept out of the way on purpose |
+| `instructor/tests/bank_account_cases.csv` | The bank account test set: 17 messages that must be masked, must stay, or are known gaps. Paste them into Robin, or run them with `python -m pytest instructor/tests/test_bank_accounts.py` |

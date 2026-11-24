@@ -1,7 +1,8 @@
-# Runs Robin on the experiment dataset in Langfuse (experiments/run_experiment.py).
+# Runs Robin on the experiment dataset in Langfuse (instructor/experiments/run_experiment.py).
 # Start it under Actions > "Run Robin experiment" > Run workflow.
 # Needs three repository secrets (Settings > Secrets and variables > Actions):
-#   OPENAI_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY
+#   ANTHROPIC_API_KEY, OPENAI_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY
+# (OPENAI_API_KEY is only used for embeddings when the look-up is on.)
 # and optionally the variable LANGFUSE_BASE_URL (default: the EU region, https://cloud.langfuse.com).
 name: Run Robin experiment
 
@@ -18,17 +19,17 @@ on:
       model:
         description: "Robin's model (for one run)"
         type: choice
-        default: "GPT-6 Sol"
-        options: ["GPT-6 Sol", "GPT-4.1 mini"]
+        default: "Claude Sonnet 5.5"
+        options: ["Claude Sonnet 5.5", "Claude Haiku 5.5"]
       guardrails:
         description: "Guardrails (for one run): on, off, or a list such as injection,facts"
         type: string
         default: "on"
       effort:
-        description: "Reasoning effort (GPT-6 Sol only)"
+        description: "Effort level (applies to both models on Claude)"
         type: choice
         default: "medium"
-        options: ["none", "low", "medium", "high"]
+        options: ["low", "medium", "high", "xhigh", "max"]
       user:
         description: "User name shown in Langfuse"
         type: string
@@ -42,6 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
       LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
@@ -59,18 +61,18 @@ jobs:
           python-version: "3.13"
       - name: Check the secrets are there
         run: |
-          for name in OPENAI_API_KEY LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY; do
+          for name in ANTHROPIC_API_KEY LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY; do
             if [ -z "${!name}" ]; then echo "::error::The repository secret $name is missing."; exit 1; fi
           done
       - run: pip install -r requirements.txt
       - name: Run the experiment
         run: |
           if [ "$RUNS" = "one run" ]; then
-            python experiments/run_experiment.py --model "$MODEL" --guardrails "$GUARDRAILS" --effort "$EFFORT" --user "$RUN_USER"
+            python instructor/experiments/run_experiment.py --model "$MODEL" --guardrails "$GUARDRAILS" --effort "$EFFORT" --user "$RUN_USER"
           else
-            for model in "GPT-6 Sol" "GPT-4.1 mini"; do
+            for model in "Claude Sonnet 5.5" "Claude Haiku 5.5"; do
               for guardrails in on off; do
-                python experiments/run_experiment.py --model "$model" --guardrails "$guardrails" --effort "$EFFORT" --user "$RUN_USER"
+                python instructor/experiments/run_experiment.py --model "$model" --guardrails "$guardrails" --effort "$EFFORT" --user "$RUN_USER"
               done
             done
           fi

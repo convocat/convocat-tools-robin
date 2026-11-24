@@ -63,7 +63,7 @@ def test_guardrail_settings():
 def test_a_local_run_with_the_fake_model():
     data = [{"input": i["input"], "expected_output": i["expected_output"], "metadata": i["metadata"]}
             for i in ITEMS if i["id"] in ("2", "58", "C5-3")]
-    task = rx.make_task(FakeClient(), "GPT-6 Sol", "low", rx.parse_guardrails("on"), "test-run")
+    task = rx.make_task(FakeClient(), "Claude Sonnet 5.5", "low", rx.parse_guardrails("on"), "test-run")
     result = rx.get_client().run_experiment(name="test", data=data, task=task, evaluators=rx.EVALUATORS)
     outputs = [r.output for r in result.item_results]
     assert all(isinstance(o, str) and o for o in outputs)

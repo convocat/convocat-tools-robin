@@ -1,7 +1,10 @@
-"""Robin's API for Vercel: the chat widget (public/index.html) sends each message here.
+"""Robin's API: the chat widget (public/index.html) sends each message here.
 
-Vercel runs this file as a function: every request starts, runs and stops. That's why the
-conversation lives in the browser, and why every request ends with flushing the traces to Langfuse.
+The conversation lives in the browser, not on the server, and every request ends by flushing its
+traces to Langfuse, so a turn is complete in Langfuse by the time the answer reaches the widget.
+
+Two model services, because Claude has no embeddings model: Claude writes the answers and runs the
+guardrails, and OpenAI turns text into embeddings for the look-up (RAG). See lookup.py.
 """
 
 import logging
@@ -15,6 +18,7 @@ os.environ.setdefault("LANGFUSE_TRACING_ENVIRONMENT", "course")
 
 from flask import Flask, jsonify, request, send_file  # noqa: E402
 from langfuse import get_client  # noqa: E402
+from anthropic import Anthropic  # noqa: E402
 from openai import OpenAI  # noqa: E402
 
 import help_pages  # noqa: E402
@@ -23,7 +27,8 @@ import robin  # noqa: E402
 app = Flask(__name__)
 log = logging.getLogger("robin")
 
-client = OpenAI()
+chat_client = Anthropic()   # Robin's answers and the guardrails
+embed_client = OpenAI()     # embeddings for the look-up only
 COURSE_PASSCODE = os.getenv("COURSE_PASSCODE", "")
 MAX_MESSAGES = int(os.getenv("MAX_MESSAGES_PER_CHAT", "40"))
 MAX_MESSAGE_LENGTH = 2000
@@ -58,9 +63,10 @@ def chat():
         result = robin.handle_turn(
             message,
             [item for item in history if isinstance(item, dict)],
-            client=client,
-            robin_model_label=str(data.get("model") or "GPT-6 Sol"),
-            reasoning_effort=str(data.get("effort") or "medium"),
+            client=chat_client,
+            embed_client=embed_client,
+            robin_model_label=str(data.get("model") or robin.DEFAULT_MODEL_LABEL),
+            effort=str(data.get("effort") or robin.DEFAULT_EFFORT),
             participant=name,
             session_id=str(data.get("session_id") or "no-session")[:100],
             guardrails=data.get("guardrails"),  # e.g. {"facts": false}; anything missing stays on

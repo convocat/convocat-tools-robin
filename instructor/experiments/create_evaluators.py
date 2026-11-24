@@ -1,7 +1,7 @@
 """Create Robin's LLM-as-a-Judge evaluators in Langfuse, from the prompts in EVALUATORS.md.
 
-    python experiments/create_evaluators.py            # create the evaluators and rules
-    python experiments/create_evaluators.py --dry-run  # only show what would be created
+    python instructor/experiments/create_evaluators.py            # create the evaluators and rules
+    python instructor/experiments/create_evaluators.py --dry-run  # only show what would be created
 
 Every "## eval: ..." section in EVALUATORS.md with a prompt becomes one Boolean evaluator, so the
 evaluators in Langfuse always match the file. Evaluators and rules that already exist (same name)
@@ -13,7 +13,8 @@ Two rules are created:
   when you want live scoring; every judgement is a paid model call.
 
 Uses LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY and LANGFUSE_BASE_URL from .env or the environment.
-The judges run on JUDGE_MODEL (default gpt-6-luna) through the project's OpenAI LLM connection.
+The judges run on JUDGE_MODEL (default claude-haiku-5-5) through an LLM connection you add in
+the Langfuse UI yourself (Settings > LLM Connections) - this script does not create one.
 """
 
 from __future__ import annotations
@@ -24,7 +25,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv  # noqa: E402
@@ -48,9 +49,9 @@ from langfuse.api.evaluation_rules.types.evaluation_rule_evaluator_assignment_in
 from langfuse.api.evaluators.types.create_evaluator_request import CreateEvaluatorRequest_LlmAsJudge  # noqa: E402
 from langfuse.api.evaluators.types.evaluator_model_config import EvaluatorModelConfig  # noqa: E402
 
-EVALUATORS_FILE = ROOT / "EVALUATORS.md"
+EVALUATORS_FILE = ROOT / "instructor" / "EVALUATORS.md"
 DATASET = "robin-experiment"
-JUDGE_MODEL = os.getenv("JUDGE_MODEL", "gpt-6-luna")
+JUDGE_MODEL = os.getenv("JUDGE_MODEL", "claude-haiku-5-5")
 
 # Which evaluators each rule uses. Names as in EVALUATORS.md.
 EXPERIMENT_EVALS = [
@@ -101,17 +102,28 @@ def mapping_for(prompt: str) -> list[PromptVariableMappingInput]:
 
 
 def judge_model(langfuse) -> EvaluatorModelConfig | None:
-    """The project's OpenAI connection with JUDGE_MODEL, or None for the project's default evaluation model."""
+    """A connection in the project that can serve JUDGE_MODEL, or None for the project's default.
+
+    An evaluator names both a connection and a model, and the two have to agree: a connection to
+    Anthropic cannot serve a GPT model, or the other way round. The vendor is read from JUDGE_MODEL
+    rather than hardcoded, because Robin moved to Claude while this still looked for OpenAI - which
+    would have produced an evaluator asking an OpenAI connection for a Claude model.
+    """
+    wanted = "anthropic" if JUDGE_MODEL.startswith("claude") else "openai"
     try:
         connections = langfuse.api.llm_connections.list(limit=50).data
     except Exception as error:
         print(f"Couldn't read the LLM connections ({error}); using the project's default evaluation model.")
         return None
     for connection in connections:
-        if "openai" in str(getattr(connection, "provider", "")).lower() or \
-           "openai" in str(getattr(connection, "adapter", "")).lower():
+        haystack = f"{getattr(connection, 'provider', '')} {getattr(connection, 'adapter', '')}".lower()
+        if wanted in haystack:
             return EvaluatorModelConfig(provider=connection.provider, model=JUDGE_MODEL)
-    print("No OpenAI LLM connection found; using the project's default evaluation model.")
+    names = ", ".join(str(getattr(c, "provider", "?")) for c in connections) or "none at all"
+    print(f"No {wanted} LLM connection in this project (found: {names}), so the judges would have "
+          f"nothing to run {JUDGE_MODEL} on. Add one in Langfuse under Settings > LLM Connections, "
+          f"or set JUDGE_MODEL to a model an existing connection can serve. Falling back to the "
+          f"project's default evaluation model.")
     return None
 
 
@@ -130,7 +142,7 @@ def build_requests(prompts: dict[str, str], model) -> dict[str, CreateEvaluatorR
     for name, prompt in prompts.items():
         requests[name] = CreateEvaluatorRequest_LlmAsJudge(
             name=name,
-            description="Robin, the Nest & Co chatbot. Prompt from EVALUATORS.md in github.com/convocat/Robin.",
+            description="Robin, the Nest & Co chatbot. Prompt from EVALUATORS.md in github.com/convocat/convocat-tools-robin.",
             prompt=prompt,
             model_config_=model,
             variable_mapping=mapping_for(prompt),

@@ -18,7 +18,7 @@ Give your evaluators names that start with `eval:`, so they sit together in the 
 ## How to set up each evaluator
 
 1. In Langfuse, open **Evaluators** and click **New evaluator**. Choose **LLM-as-a-Judge**, then start from a blank prompt.
-2. **Model:** pick GPT-6 Luna (cheap and fast) or GPT-6 Sol (more careful). If you want to set reasoning effort, add it as a provider option, for example `{"reasoning_effort": "low"}`.
+2. **Model:** pick Claude Haiku 5.5 (cheap and fast) or Claude Sonnet 5.5 (more careful). If you want to set the effort level, add it as a provider option, for example `{"effort": "low"}` - check what your Langfuse LLM connection accepts.
 3. **Prompt:** paste the prompt below.
 4. **Score type:** Boolean.
 5. **Map the variables:** `{{input}}` to the observation's **input** (the customer's message) and `{{output}}` to the observation's **output** (Robin's final answer).

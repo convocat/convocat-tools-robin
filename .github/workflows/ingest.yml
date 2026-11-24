@@ -1,11 +1,13 @@
 # The ingestion pipeline: puts the customer handbook into Robin's content database
-# (ingestion/ingest_handbook.py). Run it after every change to the handbook:
-# Actions > "Ingest the handbook" > Run workflow.
+# (ingestion/ingest_source_docs.py). Run it after every change to a document in source-docs/:
+# Actions > "Ingest the source documents" > Run workflow.
+# This workflow is the Postgres path, for the instructor-hosted Robin. On the file store
+# (no DATABASE_URL) the ingestion runs locally and data/chunks.json is committed instead.
 # Needs four repository secrets (Settings > Secrets and variables > Actions):
 #   OPENAI_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, DATABASE_URL
 # DATABASE_URL is the database's External Database URL from the Render dashboard.
 # Optionally the variable LANGFUSE_BASE_URL (default: the EU region, https://cloud.langfuse.com).
-name: Ingest the handbook
+name: Ingest the source documents
 
 on:
   workflow_dispatch:
@@ -35,5 +37,5 @@ jobs:
             if [ -z "${!name}" ]; then echo "::error::The repository secret $name is missing."; exit 1; fi
           done
       - run: pip install -r requirements.txt
-      - name: Ingest the handbook
-        run: python ingestion/ingest_handbook.py
+      - name: Ingest the source documents
+        run: python ingestion/ingest_source_docs.py

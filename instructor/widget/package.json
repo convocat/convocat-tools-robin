@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --outDir ../public --emptyOutDir false",
+    "build": "vite build --outDir ../../public --emptyOutDir false",
     "build:preview": "VITE_MOCK=1 vite build --outDir dist-mock"
   },
   "dependencies": {

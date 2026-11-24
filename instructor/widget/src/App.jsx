@@ -1,8 +1,8 @@
 import { useState } from "react";
 import RobinWidget, { MOCK } from "./RobinWidget.jsx";
 
-const MODELS = ["GPT-6 Sol", "GPT-4.1 mini"];
-const EFFORTS = ["none", "low", "medium", "high"];
+const MODELS = ["Claude Sonnet 5.5", "Claude Haiku 5.5"];
+const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
 const MAX_RESULTS = ["1", "3", "5"];
 
 // The guardrails you can switch off, to see what Robin does with the system prompt alone.
@@ -87,7 +87,7 @@ function CoursePanel({ settings, setSettings }) {
             </label>
             <label>
               Reasoning effort
-              <select id="robin-effort" value={settings.effort} onChange={update("effort")} disabled={settings.model !== "GPT-6 Sol"}>
+              <select id="robin-effort" value={settings.effort} onChange={update("effort")}>
                 {EFFORTS.map((e) => (
                   <option key={e}>{e}</option>
                 ))}
@@ -196,7 +196,7 @@ export default function App() {
   const [settings, setSettings] = useState(() => ({
     name: load("name", ""),
     passcode: "",
-    model: load("model", "GPT-6 Sol"),
+    model: load("model", "Claude Sonnet 5.5"),
     effort: load("effort", "medium"),
     guardrails: loadGuardrails(),
     lookUp: load("lookUp", "false") === "true", // off by default: Robin as it was, until you switch it on
