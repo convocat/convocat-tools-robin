@@ -43,6 +43,11 @@ Things that look like bugs and are course material. Leave them in.
 - **Give Robin a real escalation path.** When a customer insists on a human (seen for real in the
   traces — "I need to talk with a human agent" x3), Robin has no contact info to offer: the
   default system prompt only injects `RETURN_POLICY`, not Customer Care's hours/channel.
+- **`pytest` is not a declared dependency.** `REPO_GUIDE.md` documents
+  `python -m pytest instructor/tests` as a command, but `requirements.txt` doesn't list pytest, so
+  the documented command fails in a fresh venv. Found on 2026-11-24 when the suite had to be run
+  against a system Python that had langfuse 3.14.5 instead of the pinned 5.0.4, which failed one
+  test for environment reasons alone. Wants a `requirements-dev.txt`.
 - **Add English language to the PO/CxD dashboard** (`dashboard-kit/`, currently Dutch-only UI).
   Planned as a live-coding demo.
 - **Add an evals dashboard to the PO/CxD dashboard** (`dashboard-kit/`) — per-evaluator pass rate
@@ -60,6 +65,12 @@ Things that look like bugs and are course material. Leave them in.
 
 ## Done
 
+- 2026-11-24 — Simplified the repo so a student can clone it and get a working Robin: Render is
+  the only deploy path (`vercel.json` and the Vercel button gone), both deploy buttons now point at
+  `convocat/convocat-tools-robin` instead of relying on the rename redirect from `convocat/Robin`,
+  instructor material moved into `instructor/` (widget source, experiments, judge prompts,
+  teaching guide, tests), and `content/` renamed `source-docs/`. 64 tests pass. `dashboard-kit/`
+  stays in this repo by Maaike's decision; whether it also moves under `instructor/` is open.
 - Cloned the repo locally, wired up `.env`, confirmed Langfuse tracing end to end.
 - Connected the real Render Postgres for look-up (RAG); ran the ingestion pipeline.
 - Ran the 51-item experiment set with look-up on, guardrails on and off.
