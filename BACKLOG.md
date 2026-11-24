@@ -125,8 +125,9 @@ Things that look like bugs and are course material. Leave them in.
   nine `robin/` prompts were created on first run. `--no-chat` skips the message and its cost.
   It does not stop at the first missing key - an earlier version did, which meant fixing one key
   only to discover the next was wrong too. Each service is checked if its own key is present.
-  **Still open:** the instructor's email in the skill is a placeholder, to fill in before the repo
-  goes to participants. And two things could not be verified here for want of an
+  The instructor's email in Step 9 is maaike@convocat.nl, given by Maaike on 2026-11-24. Note that
+  this repo is public, so that address sits in a public repo and will be scraped eventually.
+  **Still open:** two things could not be verified here for want of an
   `ANTHROPIC_API_KEY`: the Claude leg and the trace read-back - which are the first two things a
   participant exercises. The course board's B6 (test the install the way a student will, on a clean
   machine) is where that gets settled.

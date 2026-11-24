@@ -161,7 +161,7 @@ that a new trace appears in their Langfuse — not just that the chat replied.
 while teaching. This is the one step nothing here can verify, and if they forget it their
 instructor is simply blind to their work and will not know.
 
-> Instructor's email: *fill this in before handing the repo to participants.*
+> Instructor's email: **maaike@convocat.nl**
 
 Ask them to confirm they have sent the invitation, and say plainly that you cannot check it.
 
