@@ -36,6 +36,21 @@ Things that look like bugs and are course material. Leave them in.
 - **Put `ANTHROPIC_API_KEY` where Robin runs.** Needed in `.env` locally, in Render's environment,
   and as a GitHub Actions secret for the experiment workflow. Robin still starts without it and
   fails on the first message, so the symptom is a broken chat rather than a boot failure.
+- **Check the saved views and filters in Langfuse against the renamed trace fields.** Maaike chose
+  on 2026-11-24 to keep the new names rather than restore the old ones, so anything saved in the
+  Langfuse UI that refers to the old ones silently stops matching - it does not error, it just
+  returns nothing, which is the worst way for a teaching view to break. What changed:
+
+  | Was | Is now | Where |
+  | --- | --- | --- |
+  | `reasoning_effort` | `effort` | the turn's metadata |
+  | `handbook_version`, `ingested_at` | `store`, `corpus_version`, `ingested_at`, `matches_source` | the `Look-up 2` span's metadata |
+  | `model: gpt-6-sol`, `model: gpt-4.1-mini` | `model: claude-sonnet-5-5`, `model: claude-haiku-5-5` | the trace tags |
+  | "Ingestion – customer handbook" | "Ingestion - source documents" | the ingestion trace name |
+
+  `robin_model` and `guardrail_model` keep their names but their values are Claude model ids now.
+  The README's "What to show in the traces table" section describes a saved view for participants,
+  which is the first one to re-check. Only Maaike can do this: saved views live in the UI.
 - **Reword two look-up prompts in Langfuse: "handbook" -> "the documents".**
   `robin/system-prompt-lookup` and `robin/facts-check-lookup` both tell Robin it is working from
   "handbook sections". Since 2026-11-24 the corpus is three documents (handbook, product guide,
