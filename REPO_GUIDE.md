@@ -50,7 +50,7 @@ these have to stay in the same repo as the code they act on.
       │ OpenAI (embed)│        │ scores · datasets    │   │  chunks)   │
       └───────────────┘        └──────────▲───────────┘   └─────▲──────┘
                                           │                     │
-          reads traces ─ instructor/dashboard-kit/      ingestion/ingest_handbook.py
+          reads traces ─ instructor/dashboard-kit/      ingestion/ingest_source_docs.py
          runs datasets ─ instructor/experiments/        (fills the database)
 ```
 
@@ -72,7 +72,7 @@ these have to stay in the same repo as the code they act on.
 | Robin's system prompt, the return policy, a guardrail prompt | **Langfuse** → Prompt Management → `robin/…` | Save a new version with the label `production`. Robin picks it up within about a minute. No code change. |
 | My own test version of the system prompt | Langfuse, saved with your own label (for example `leela`) | Type the label in the course panel under **Prompt label** |
 | The fixed fallback messages ("I'm not sure about that…") | `prompts.py` → `FALLBACKS` | Code change, then redeploy |
-| The handbook Robin looks things up in | Langfuse prompt `robin/handbook` | Run the GitHub Action **Ingest the handbook** afterwards |
+| The documents Robin looks things up in | `source-docs/*.md` in this repo | Re-run the ingestion. On the file store, commit the new `data/chunks.json` |
 | The help-centre pages (`/help`) | `source-docs/handbook.md`, `source-docs/product-guide.md`, `source-docs/faq.md` | Code change, then redeploy |
 | Which models are used | Environment variables `ROBIN_MODEL`, `COMPARE_MODEL`, `GUARDRAIL_MODEL` (see section 5) | Change them in Render's settings, then redeploy |
 | Look and feel of the chat widget or course panel | `instructor/widget/src/` | Run `npm run build` in `instructor/widget/`, then commit and redeploy |
@@ -108,7 +108,6 @@ be reached.
 | `robin/injection-check` | Input guardrail |
 | `robin/facts-check` | Output guardrail (look-up off) |
 | `robin/retry-note` | Tells Robin what to fix when the facts check blocked an answer |
-| `robin/handbook` | The full handbook: the source for ingestion |
 | `robin/query-rewrite` | Look-up step 1: turns the message into a search query |
 | `robin/system-prompt-lookup` | Robin's answer when look-up is on |
 | `robin/facts-check-lookup` | Output guardrail when look-up is on |
@@ -132,9 +131,10 @@ Guardrails always use the `production` label. Only the system prompt follows a s
 
 | File | What it does |
 |---|---|
-| `source-docs/handbook.md` | Starting version of the customer handbook (the live version is in Langfuse) |
-| `source-docs/product-guide.md`, `source-docs/faq.md` | Help-centre content |
-| `ingestion/ingest_handbook.py` | Fetches `robin/handbook` from Langfuse, tidies it, chunks it, embeds it and replaces the old chunks in the database. Each run is traced as "Ingestion – customer handbook". |
+| `source-docs/handbook.md` | The customer handbook. This is the live version: the corpus is the repo |
+| `source-docs/product-guide.md`, `source-docs/faq.md` | Help-centre content, and part of the look-up corpus |
+| `ingestion/ingest_source_docs.py` | Reads every document in `source-docs/`, tidies them, chunks them per section, embeds them and replaces everything in the content store. Each run is traced as "Ingestion - source documents". |
+| `data/chunks.json` | The committed chunks and embeddings: the content store used when `DATABASE_URL` is not set. This is what lets a student clone search without a database. |
 
 ### Experiments and evals
 
@@ -192,7 +192,7 @@ Each one runs on GitHub's computers when you press **Actions → (name) → Run 
 
 | Action | Does |
 |---|---|
-| **Ingest the handbook** | Re-ingests `robin/handbook` into the database. Run it after every handbook change. |
+| **Ingest the source documents** | Re-ingests `source-docs/` into the Postgres store. For the instructor-hosted Robin; on the file store the ingestion runs locally. |
 | **Run Robin experiment** | Runs the dataset on one setting, or on a four-run comparison |
 | **Set up Langfuse evaluators** | Creates the judges from `instructor/EVALUATORS.md` (skips any that already exist) |
 
@@ -216,7 +216,7 @@ These are set in `.env` locally, or in Render's project settings online.
 | `GUARDRAIL_EFFORT` | Reasoning effort for the guardrail model | `low` |
 | `MAX_MESSAGES_PER_CHAT` | Message limit per chat window | `40` |
 | `COURSE_PASSCODE` | Word participants need to use Robin | empty |
-| `DATABASE_URL` | Address of the Postgres content database (only needed for look-up) | — |
+| `DATABASE_URL` | Postgres content store. Leave it unset to use the committed `data/chunks.json` instead | — |
 
 ---
 
@@ -264,7 +264,7 @@ Type these in a terminal opened in the repo folder, or simply ask Claude Code to
 ## 8. Gotchas
 
 - **Prompts:** edit them in Langfuse, not in `prompts.py`. Changes in `prompts.py` don't reach a Robin that's already running.
-- **Handbook:** changing it in Langfuse does nothing until you run **Ingest the handbook**.
+- **Source documents:** changing one in `source-docs/` does nothing until you re-run the ingestion - and on the file store, until you commit the new `data/chunks.json`.
 - **Widget:** changing `instructor/widget/src/` does nothing until you run `npm run build`. Never edit `public/index.html` directly.
 - **Render** doesn't update automatically: use **Manual Deploy → Deploy latest commit**.
 - **On a first visit all guardrails are off.** That's intentional, so participants see the bare system prompt first.

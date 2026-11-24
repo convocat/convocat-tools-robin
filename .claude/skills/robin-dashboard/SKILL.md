@@ -42,6 +42,6 @@ Tell Maaike the dashboard is at **http://localhost:8080**, with tabs for Product
 
 ## Notes
 
-- `instructor/dashboard-kit/robin_adapter.py` only pulls `environment: "course"` traces (real course chats), not the `experiment`/`sdk-experiment`/`ingestion` environments used by `experiments/run_experiment.py` or `ingestion/ingest_handbook.py`.
+- `instructor/dashboard-kit/robin_adapter.py` only pulls `environment: "course"` traces (real course chats), not the `experiment`/`sdk-experiment`/`ingestion` environments used by `instructor/experiments/run_experiment.py` or `ingestion/ingest_handbook.py`.
 - The review panel (Beoordeling) in the conversation detail is UI-only — it doesn't persist anywhere. That's intentionally left to the separate `trace-annotation-dashboard` project.
 - If `robin_adapter.py` raises a `RuntimeError` mentioning deprecated Langfuse endpoints, `/api/public/traces` or `/api/public/scores` have likely been removed — it needs migrating to `/api/public/v2/observations` and `/api/public/v3/scores`.

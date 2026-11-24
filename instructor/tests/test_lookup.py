@@ -157,29 +157,88 @@ def test_a_failed_search_still_gives_an_answer():
     client = FakeClient(embeddings_fail=True)
     result = robin.handle_turn("Belgium returns?", [], client=client, look_up=True)
     assert result.outcome == "answered"
-    assert "(The handbook could not be searched.)" in robin_call(client)["system"]
+    assert "(The source documents could not be searched.)" in robin_call(client)["system"]
     assert result.summary["sections_found"].startswith("ERROR")
 
 
-def test_no_database_gives_a_clear_reason(monkeypatch):
+def _write_chunks_file(path, documents):
+    """A chunks file in the shape the ingestion writes, with the tests' fake embeddings."""
+    chunks = []
+    for name, text in documents:
+        for chunk in lookup.split_into_chunks(text, document=name, version="3.2"):
+            chunks.append({"document": chunk.document, "version": chunk.version, "section": chunk.section,
+                           "text": chunk.text, "embedding": fake_embedding(chunk.text)})
+    path.write_text(json.dumps({
+        "embedding_model": lookup.EMBEDDING_MODEL,
+        "corpus_version": lookup.corpus_fingerprint(documents),
+        "ingested_at": "2026-11-24T00:00:00+00:00",
+        "chunks": chunks,
+    }, ensure_ascii=False), encoding="utf-8")
+    return len(chunks)
+
+
+def test_without_a_database_the_committed_file_is_searched(monkeypatch, tmp_path):
+    """The student set-up: no DATABASE_URL, so the chunks come from data/chunks.json."""
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setattr(lookup, "search", REAL_SEARCH)
+    chunks_file = tmp_path / "chunks.json"
+    _write_chunks_file(chunks_file, [("handbook", prompts.HANDBOOK)])
+    monkeypatch.setattr(lookup, "CHUNKS_FILE", chunks_file)
+
+    assert lookup.store_name().startswith("file")
+    hits = REAL_SEARCH(fake_embedding("return costs Belgium"), 2)
+    assert hits[0].section == "Returns" and hits[0].document == "handbook"
+    assert hits[0].document_version == "3.2"
+
     result = robin.handle_turn("Belgium returns?", [], client=FakeClient(), look_up=True)
-    assert "DATABASE_URL is not set" in result.summary["sections_found"]
+    assert result.outcome == "answered"
+    assert result.summary["sections_found"].startswith("Returns (")
+
+
+def test_a_missing_chunks_file_gives_a_clear_reason(monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setattr(lookup, "search", REAL_SEARCH)
+    monkeypatch.setattr(lookup, "CHUNKS_FILE", tmp_path / "not-there.json")
+    result = robin.handle_turn("Belgium returns?", [], client=FakeClient(), look_up=True)
+    assert "not-there.json is missing" in result.summary["sections_found"]
+
+
+def test_the_trace_says_when_the_chunks_no_longer_match_the_source(monkeypatch, tmp_path):
+    """Edit a document, forget to re-ingest, and the span should say so rather than look fine."""
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    chunks_file = tmp_path / "chunks.json"
+    _write_chunks_file(chunks_file, [("handbook", prompts.HANDBOOK)])
+    monkeypatch.setattr(lookup, "CHUNKS_FILE", chunks_file)
+
+    source = tmp_path / "source-docs"
+    source.mkdir()
+    (source / "handbook.md").write_text(prompts.HANDBOOK, encoding="utf-8")
+    monkeypatch.setattr(lookup, "SOURCE_DOCS", source)
+    assert lookup.corpus_status()["matches_source"] is True
+
+    (source / "handbook.md").write_text(prompts.HANDBOOK + "\n## New section\nSomething else.\n", encoding="utf-8")
+    assert lookup.corpus_status()["matches_source"] is False
+
+
+def test_with_a_database_url_the_database_is_used(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example/not-connected")
+    assert lookup.using_database() and "postgres" in lookup.store_name()
+    assert lookup.corpus_status()["matches_source"] is None
 
 
 @pytest.mark.skipif(not os.getenv("TEST_DATABASE_URL"), reason="needs a Postgres database with pgvector")
 def test_ingestion_and_search_with_a_real_database(monkeypatch):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ingestion"))
-    import ingest_handbook
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "ingestion"))
+    import ingest_source_docs
 
     monkeypatch.setenv("DATABASE_URL", os.environ["TEST_DATABASE_URL"])
     client = FakeClient()
-    assert ingest_handbook.main(client=client) == len(lookup.split_into_chunks(prompts.HANDBOOK))
+    expected = sum(len(lookup.split_into_chunks(text)) for _, text in lookup.read_source_docs())
+    assert ingest_source_docs.main(client=client) == expected
     hits = REAL_SEARCH(fake_embedding("return costs Belgium"), 2)
     assert hits[0].section == "Returns" and hits[0].document_version == "3.2"
     listed = lookup.list_chunks()
-    assert len(listed) == len(lookup.split_into_chunks(prompts.HANDBOOK))
+    assert len(listed) == expected
     assert listed[0]["section"] == "Document information" and len(listed[0]["first_numbers"]) == 8
 
 

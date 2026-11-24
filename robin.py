@@ -12,7 +12,8 @@ Every customer message becomes ONE trace in Langfuse, with these steps inside it
     └── 5. and 6.: only if the facts check blocked the first answer (a rewrite, then a second check)
 
 With "Look things up" switched on in the course panel, Robin works like a RAG bot: instead of the whole
-return policy, it gets the handbook sections that match the question. Two steps appear before step 3:
+return policy, it gets the sections of Nest & Co's source documents that match the question.
+Two steps appear before step 3:
 
     ├── Look-up 1 – rewrite the question into a search query   (small model)
     ├── Look-up 2 – search the content database                (embeddings, see lookup.py)
@@ -222,13 +223,13 @@ STEPS = {
               "what_it_does": "Checks that every fact in Robin's answer is in the return policy.",
               "if_it_fails": "fail closed: the answer is not sent"},
     "facts_lookup": {"layer": "output guardrail", "uses_llm": "yes: the small model",
-                     "what_it_does": "Checks that every fact in Robin's answer is in the handbook sections it was given.",
+                     "what_it_does": "Checks that every fact in Robin's answer is in the document sections it was given.",
                      "if_it_fails": "fail closed: the answer is not sent"},
     "rewrite": {"layer": "look-up (RAG)", "slide_step": "question recognition", "uses_llm": "yes: the small model",
                 "what_it_does": "Turns the customer's message and the conversation so far into a search query."},
     "search": {"layer": "look-up (RAG)", "slide_step": "information retrieval",
                "uses_llm": "no: an embedding model turns text into numbers",
-               "what_it_does": "Finds the handbook chunks in the content database whose meaning is closest to the search query.",
+               "what_it_does": "Finds the chunks of the source documents whose meaning is closest to the search query.",
                "if_it_fails": "Robin gets no sections, so it should say it doesn't know"},
 }
 
@@ -387,7 +388,7 @@ def handle_turn(
                 result.outcome = "blocked by input guardrail"
                 return _finish(turn, result, facts_result="SKIPPED")
 
-            # --- Look-up (only when switched on): find the handbook sections for this question ---
+            # --- Look-up (only when switched on): find the document sections for this question ---
             if look_up:
                 sources = _look_up(client, embed_client, langfuse, masked_message, history,
                                    max_results, result)
@@ -491,9 +492,9 @@ def _look_up(client, embed_client, langfuse, masked_message: str, history: list[
              max_results: int, result: TurnResult) -> str:
     """The look-up (RAG): rewrite the question into a search query, then search the content database.
 
-    Returns the handbook sections as text for Robin's system prompt. Two steps in the trace:
+    Returns the matching document sections as text for Robin's system prompt. Two steps in the trace:
     'Look-up 1' (a small model writes the query) and 'Look-up 2' (the search in the database).
-    The handbook gets into the database through the ingestion pipeline (ingestion/ingest_handbook.py).
+    The documents get into the store through the ingestion pipeline (ingestion/ingest_source_docs.py).
     """
     # Look-up 1: question recognition. A small model turns the message (plus context) into a query.
     recent = history[-6:]
@@ -524,11 +525,11 @@ def _look_up(client, embed_client, langfuse, masked_message: str, history: list[
                 vectors, tokens = lookup.embed(embed_client, [query])
                 embedding.update(output=f"{len(vectors[0])} numbers", usage_details={"input_tokens": tokens})
             hits = lookup.search(vectors[0], max_results)
-            sections = [{"section": hit.section, "similarity": round(hit.similarity, 3), "text": hit.text}
-                        for hit in hits]
+            sections = [{"document": hit.document, "section": hit.section,
+                         "similarity": round(hit.similarity, 3), "text": hit.text} for hit in hits]
             search.update(output=sections, metadata={
                 **STEPS["search"], "max_results": max_results, "embedding_model": lookup.EMBEDDING_MODEL,
-                "handbook_version": hits[0].document_version, "ingested_at": hits[0].ingested_at,
+                **lookup.corpus_status(),
             })
             sources = lookup.format_sources(hits)
             result.summary["sections_found"] = ", ".join(f"{s['section']} ({s['similarity']})" for s in sections)
@@ -536,7 +537,7 @@ def _look_up(client, embed_client, langfuse, masked_message: str, history: list[
             log.exception("content database search failed")
             reason = str(error) if isinstance(error, lookup.LookUpError) else f"The search failed: {error}"
             search.update(level="ERROR", status_message=reason, metadata=STEPS["search"])
-            sources = "(The handbook could not be searched.)"
+            sources = "(The source documents could not be searched.)"
             result.summary["sections_found"] = f"ERROR: {reason}"
     return sources
 
@@ -544,7 +545,7 @@ def _look_up(client, embed_client, langfuse, masked_message: str, history: list[
 def _facts_check(client, langfuse, draft: str, checks: dict, name: str) -> tuple[str, list, str | None]:
     """Output guardrail. Returns (PASS/BLOCK/ERROR, unsupported statements, language)."""
     facts = checks["facts"]
-    source = "the handbook sections" if checks["facts_step"] is STEPS["facts_lookup"] else "the return policy"
+    source = "the document sections" if checks["facts_step"] is STEPS["facts_lookup"] else "the return policy"
     with langfuse.start_as_current_observation(
         as_type="guardrail", name=name, input=draft,
     ) as guard:

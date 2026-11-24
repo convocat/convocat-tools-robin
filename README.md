@@ -81,35 +81,64 @@ Under **Look-up (RAG)** in the course panel, you can switch on **Look things up 
 
 It's off by default, so Robin behaves as before until you switch it on.
 
-It works in two separate parts, like the course slide "DocBot: from question to answer":
+It works in two separate parts, like the course slide "from question to answer".
 
-**The ingestion pipeline** (`ingestion/ingest_handbook.py`) puts the handbook into the database. It runs separately from Robin, whenever the handbook changes:
+#### The corpus is `source-docs/`
 
-1. **Get the handbook:** the `production` version of the prompt `robin/handbook` in Langfuse. The handbook lives there like any other prompt, with its version history. (The starting version is `source-docs/handbook.md`.)
-2. **Preprocess:** tidy the text.
-3. **Chunk:** cut it into chunks, one per section.
+The documents Robin can look things up in are the markdown files in `source-docs/` — the same files the help centre publishes at `/help`. Editing one there and re-running the ingestion is the whole content workflow: no database admin, and git keeps the history.
+
+Not every document has to be published. `help_pages.py` decides that separately, so Robin can be given a document the website doesn't show — an internal playbook, for instance.
+
+**The documents disagree with each other, on purpose.** See "Design choices" below: the free-shipping threshold is €50 in two places and €75 in two others. Ask the look-up "when do I get free shipping?" and the top three chunks come back within 0.004 of each other, two of them contradicting the third. That is the lesson — retrieval working correctly and the answer still being unreliable.
+
+#### The ingestion pipeline
+
+`ingestion/ingest_source_docs.py` puts the documents into the content store. It runs separately from Robin, whenever a document changes:
+
+1. **Read the documents:** every markdown file in `source-docs/`.
+2. **Preprocess:** tidy the text, and fingerprint the corpus (a short hash of the documents).
+3. **Chunk:** cut each document into chunks, one per section.
 4. **Embed:** turn every chunk into an embedding, a list of numbers that captures its meaning (OpenAI `text-embedding-3-small` — this is the one step that is not Claude, because Anthropic has no embeddings model).
-5. **Store:** replace the old chunks in the table `handbook_chunks` in the content database (Postgres with pgvector).
+5. **Store:** replace everything in the content store.
 
-Each run shows up in Langfuse as the trace "Ingestion – customer handbook", in the environment `ingestion`.
+Each run shows up in Langfuse as the trace "Ingestion - source documents", in the environment `ingestion`.
 
-**Robin's look-up** only searches the database. With the look-up on, a turn shows two extra steps before `3. Robin writes the answer`:
+Run it with `python ingestion/ingest_source_docs.py`. The corpus is currently 3 documents and 39 chunks.
+
+#### Two content stores, chosen by one setting
+
+Which store is used depends only on whether `DATABASE_URL` is set:
+
+| `DATABASE_URL` | Store | Who this is for |
+|---|---|---|
+| not set | `data/chunks.json`, committed to this repo | **Students.** No database to pay for or provision, and the chunks travel with a clone. Searching 39 chunks in Python is instant. |
+| set | Postgres with pgvector | **The instructor-hosted Robin**, so the course can point at a real vector database. |
+
+Both produce the same trace, so an exercise about reading a retrieval span works either way. After changing a document on the file store, re-run the ingestion and commit the new `data/chunks.json` — Robin only knows what was last ingested.
+
+**The trace says when the chunks are stale.** The chunks file stores the corpus fingerprint, so the `Look-up 2` span carries `matches_source`: `false` means somebody edited a document and didn't re-run the ingestion, and Robin is answering from text the repo no longer holds. (The database store keeps no fingerprint, so there it is empty rather than a guess.)
+
+#### What a turn looks like with the look-up on
+
+Two extra steps appear before `3. Robin writes the answer`:
 
 - `Look-up 1 – rewrite the question into a search query`: a small model turns the message, plus the conversation so far, into a search query (prompt `robin/query-rewrite`).
-- `Look-up 2 – search the content database`: the query becomes an embedding, and the database returns the closest chunks. Open it to see the query, the chunks found and how similar each one was (1 is the same meaning, 0 is unrelated), plus the handbook version and when it was ingested.
+- `Look-up 2 – search the content database`: the query becomes an embedding, and the store returns the closest chunks. Open it to see the query, which document and section each chunk came from and how similar it was (1 is the same meaning, 0 is unrelated), plus which store answered, the corpus fingerprint, when it was ingested, and whether it still matches `source-docs/`.
 
-**To see every chunk in the database,** open `/chunks` on Robin's site (for example `https://robin-xxxx.onrender.com/chunks`), or click "See the chunks in the content database" in the course panel. It shows each chunk's text and the first numbers of its embedding, behind the course passcode. The ingestion trace in Langfuse shows the chunks too, under step "3. Chunk".
+**To see every chunk,** open `/chunks` on Robin's site (for example `https://robin-xxxx.onrender.com/chunks`), or click "See the chunks in the content database" in the course panel. It shows each chunk's text and the first numbers of its embedding, behind the course passcode. The ingestion trace in Langfuse shows the chunks too, under step "3. Chunk".
 
 Robin then answers with those chunks in its system prompt (`robin/system-prompt-lookup`), and the facts check compares the answer with the same chunks (`robin/facts-check-lookup`). Every trace gets the tag `look-up: on` or `look-up: off`.
 
-#### Setting up the content database (once)
+#### Setting up the Postgres store (only for the instructor-hosted Robin)
+
+Students don't need this: without `DATABASE_URL`, Robin uses the committed file.
 
 1. In the Render dashboard, click **New > Postgres**. Pick the same region as Robin (Frankfurt) and a paid plan, so the database doesn't expire. pgvector is included; the ingestion switches it on.
 2. In Robin's web service, under **Environment**, add `DATABASE_URL` with the database's **Internal Database URL** (from the database's **Info** page). Save; Render redeploys Robin.
 3. In GitHub, under **Settings > Secrets and variables > Actions**, add the secret `DATABASE_URL` with the database's **External Database URL**.
-4. Under **Actions > Ingest the handbook**, click **Run workflow**.
+4. Under **Actions > Ingest the source documents**, click **Run workflow**.
 
-Repeat step 4 after every change to the handbook in Langfuse: Robin only knows the version that was last ingested.
+Repeat step 4 after every change to a document: Robin only knows the version that was last ingested.
 
 ## Run Robin on your own computer
 

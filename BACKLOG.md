@@ -28,26 +28,6 @@ Things that look like bugs and are course material. Leave them in.
 
 ## Open
 
-- **Move the look-up corpus into editable source documents in the repo.** Maaike's direction
-  (2026-11-24): the content should live in the repo in a folder such as `source-docs/`, editable
-  there, rather than having Langfuse's `robin/handbook` prompt as the source of truth. Pairs with
-  dropping Postgres for a committed chunks-and-embeddings file.
-
-  **Decided 2026-11-24: two backends, one codebase.** The instructor-hosted central Robin keeps
-  the real Render Postgres with pgvector, because "the parts of a bot" in Session 1 includes a
-  vector database and a committed JSON file is not one. Student copies run file-based: no
-  Postgres, no `DATABASE_URL`, no ingest Action, no cost. `lookup.py` picks the backend by whether
-  `DATABASE_URL` is set, so there is one code path to maintain and the retrieval span looks the
-  same in both. Content edits need a redeploy on the student path; acceptable, because students
-  are working in Claude Code anyway.
-- **Add an Anthropic LLM connection in Langfuse, for the judges.** The evaluators now default to
-  `claude-haiku-5-5` (`JUDGE_MODEL`), but an LLM-as-a-judge evaluator runs on a connection
-  configured in the Langfuse UI under Settings > LLM Connections. Until an Anthropic connection
-  exists there, the judges will fail. This is deliberately a by-hand step: nothing in this repo
-  creates Langfuse connections.
-- **Put `ANTHROPIC_API_KEY` where Robin runs.** Needed in `.env` locally, in Render's environment,
-  and as a GitHub Actions secret for the experiment workflow. Robin still starts without it and
-  fails on the first message, so the symptom is a broken chat rather than a boot failure.
 - **Give Robin a real escalation path.** When a customer insists on a human (seen for real in the
   traces — "I need to talk with a human agent" x3), Robin has no contact info to offer: the
   default system prompt only injects `RETURN_POLICY`, not Customer Care's hours/channel.
@@ -75,6 +55,26 @@ Things that look like bugs and are course material. Leave them in.
 
 ## Done
 
+- 2026-11-24 — The look-up corpus is the repo, and there are two content stores. `source-docs/`
+  is the corpus: every markdown file in it gets chunked per section, which is also the exercise
+  (drop in a document that disagrees and watch which chunk wins). The Langfuse `robin/handbook`
+  prompt is no longer the source and is no longer seeded. Which store is used depends only on
+  `DATABASE_URL`: unset means the committed `data/chunks.json`, so a student clone searches with no
+  database, nothing to provision and nothing to pay for; set means Postgres with pgvector, which
+  the instructor-hosted Robin keeps so Session 1 can point at a real vector database. Both return
+  the same `Hit` objects and the same trace shape.
+  Provenance on the retrieval span is now a corpus fingerprint - a short hash of the source
+  documents - instead of a handbook prompt version, which answers a question a version number
+  can't: `matches_source: false` means somebody edited a document and forgot to re-ingest, so
+  Robin is answering from text the repo no longer holds.
+  The corpus went from 1 document to 3 (handbook, product guide, FAQ): 39 chunks. That makes the
+  free-shipping contradiction cross-document and observable - "when do I get free shipping?"
+  returns three chunks within 0.004 similarity of each other, two of which contradict the third.
+  Verified for real, not just in tests: ingestion ran (39 chunks, 5447 embedding tokens) and two
+  live queries were searched against the committed file.
+  Still to do: the Langfuse prompts `robin/system-prompt-lookup` and `robin/facts-check-lookup`
+  say "handbook sections" where the corpus is now several documents. That wording lives in
+  Langfuse, so it is Maaike's to change in the UI.
 - 2026-11-24 — Robin runs on Claude. Claude Sonnet 5.5 writes the answers; Claude Haiku 5.5 runs
   the guardrails, the query rewrite, the comparison model and the judges, at about a twentieth of
   Sonnet's per-token price - so the course's "big model answers, small model checks" distinction

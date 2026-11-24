@@ -95,11 +95,16 @@ def test_look_up_settings_reach_robin(client, monkeypatch):
     assert seen["look_up"] is False
 
 
-def test_chunks_page_needs_the_passcode_and_explains_a_missing_database(client, monkeypatch):
+def test_chunks_page_needs_the_passcode_and_explains_an_empty_store(client, monkeypatch):
     assert client.post("/api/chunks", json={"passcode": "wrong"}).status_code == 403
     monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    def nothing_ingested():
+        raise api.robin.lookup.LookUpError("chunks.json is missing. Run the ingestion.")
+
+    monkeypatch.setattr(api.robin.lookup, "list_chunks", nothing_ingested)
     response = client.post("/api/chunks", json={"passcode": "nest"})
-    assert response.status_code == 503 and "DATABASE_URL" in response.get_json()["message"]
+    assert response.status_code == 503 and "chunks.json" in response.get_json()["message"]
     monkeypatch.setattr(api.robin.lookup, "list_chunks", lambda: [{"chunk": 1, "section": "Returns"}])
     assert client.post("/api/chunks", json={"passcode": "nest"}).get_json()["chunks"][0]["section"] == "Returns"
     assert client.get("/chunks").status_code == 200

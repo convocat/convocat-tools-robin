@@ -97,6 +97,9 @@ Write a new answer that only uses facts from the return policy. If the policy do
 # Used only when "Look things up" is switched on in the course panel.
 # ---------------------------------------------------------------------------
 
+# The handbook is no longer a Langfuse prompt. The corpus is the markdown in source-docs/, and
+# the ingestion reads it from there - so content is edited in the repo, with git as its history.
+# This is kept because the offline tests use it as a sample document.
 HANDBOOK = (Path(__file__).parent / "source-docs" / "handbook.md").read_text(encoding="utf-8")
 
 QUERY_REWRITE_PROMPT = """## Role and task
@@ -173,7 +176,6 @@ LANGFUSE_PROMPTS = {
     "robin/injection-check": INJECTION_CHECK_PROMPT,
     "robin/facts-check": FACTS_CHECK_TEMPLATE,
     "robin/retry-note": RETRY_NOTE_TEMPLATE,
-    "robin/handbook": HANDBOOK,
     "robin/query-rewrite": QUERY_REWRITE_PROMPT,
     "robin/system-prompt-lookup": SYSTEM_PROMPT_LOOKUP_TEMPLATE,
     "robin/facts-check-lookup": FACTS_CHECK_LOOKUP_TEMPLATE,
