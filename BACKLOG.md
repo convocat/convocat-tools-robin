@@ -114,6 +114,22 @@ Things that look like bugs and are course material. Leave them in.
 
 ## Done
 
+- 2026-11-24 — `/robin-install` written, with `check_install.py` behind it. This is the install
+  package the course's Session 2 and install video wait on (B5/C6 on the course board).
+  The skill is written for a participant who has never cloned a repo or opened a terminal, and it
+  checks each step rather than instructing. Its first rule: keys never enter the chat. They go into
+  `.env`, which the participant edits; the skill only ever tests whether a key NAME has a value.
+  `check_install.py` exists because of Maaike's point that an answer on screen proves only that the
+  model replied. After checking that each of the three services answers, it sends one real message
+  and reads the trace back out of Langfuse, confirming the guardrail steps are in it and that the
+  nine `robin/` prompts were created on first run. `--no-chat` skips the message and its cost.
+  It does not stop at the first missing key - an earlier version did, which meant fixing one key
+  only to discover the next was wrong too. Each service is checked if its own key is present.
+  **Still open:** the instructor's email in the skill is a placeholder, to fill in before the repo
+  goes to participants. And two things could not be verified here for want of an
+  `ANTHROPIC_API_KEY`: the Claude leg and the trace read-back - which are the first two things a
+  participant exercises. The course board's B6 (test the install the way a student will, on a clean
+  machine) is where that gets settled.
 - 2026-11-24 — The look-up corpus is the repo, and there are two content stores. `source-docs/`
   is the corpus: every markdown file in it gets chunked per section, which is also the exercise
   (drop in a document that disagrees and watch which chunk wins). The Langfuse `robin/handbook`
