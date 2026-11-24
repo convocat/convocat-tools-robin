@@ -5,7 +5,7 @@ Robin is the customer service assistant of Nest & Co, an invented online homewar
 - **A real chatbot widget** on a demo shop page: a chat bubble bottom right, built with [assistant-ui](https://www.assistant-ui.com).
 - **System prompt:** Robin's behavior, written upfront (in `prompts.py`).
 - **Input guardrails:** bank account numbers are removed by a pattern check (no LLM), and prompt injection is caught by a small model.
-- **The LLM call:** GPT-6 Sol, with a switch to GPT-4.1 mini for comparison, and a reasoning effort setting.
+- **The LLM call:** Claude Sonnet 5.5, with a switch to Claude Haiku 5.5 for comparison, and an effort setting.
 - **Output guardrail:** a small model checks that every fact is in the return policy. If not, Robin tries once more, and otherwise gives a fixed, honest answer.
 - **Observability:** every message becomes a readable trace in Langfuse.
 - **Evals:** ready-made LLM-as-a-Judge prompts in `instructor/EVALUATORS.md`.
@@ -18,11 +18,15 @@ Robin runs on **Render**.
 
 ## What you need
 
-- An **OpenAI API key** with access to GPT-6 Sol, GPT-6 Luna and GPT-4.1 mini. Set a monthly spending limit in your OpenAI account.
+- An **Anthropic API key** for Claude, which writes the answers and runs the guardrails. Get it at
+  [platform.claude.com](https://platform.claude.com) and set a spending limit. **A Claude Pro or Max
+  subscription is not an API key** — the API is billed separately from it.
+- An **OpenAI API key**, used only to turn text into embeddings for the look-up (RAG). Claude has no
+  embeddings model, so a RAG bot on Claude needs a second service for this. It costs cents.
 - A **Langfuse project** and its API keys (Settings > API Keys). Langfuse Cloud has a free tier.
 - A free **GitHub** account and a free **Render** account.
 
-The button asks for: your OpenAI key, your two Langfuse keys, the Langfuse URL (`https://cloud.langfuse.com` for the EU region) and a course passcode, a word you give participants in the session.
+The button asks for: your Anthropic key, your OpenAI key, your two Langfuse keys, the Langfuse URL (`https://cloud.langfuse.com` for the EU region) and a course passcode, a word you give participants in the session.
 
 ## Deploy to Render
 
@@ -58,7 +62,7 @@ What changes:
 - A switched-off guardrail doesn't appear in the trace tree. With all three off, the tree shows only `3. Robin writes the answer` (the step numbers stay the same, so traces are easy to compare).
 - It gets no score, and the turn's metadata lists it under `guardrails_switched_off`.
 - Each trace gets one of the tags `guardrails: all on`, `guardrails: some off` or `guardrails: all off`, so you can filter on them.
-- With bank account numbers off, a bank account number goes to OpenAI and Langfuse exactly as typed. Use made-up numbers only.
+- With bank account numbers off, a bank account number goes to the model and Langfuse exactly as typed. Use made-up numbers only.
 
 **On a first visit, all three guardrails are off**, so participants first see Robin with the system prompt alone, and then switch guardrails on. The browser remembers each person's switches after that. (The API itself treats any guardrail the browser doesn't mention as on.)
 
@@ -84,7 +88,7 @@ It works in two separate parts, like the course slide "DocBot: from question to 
 1. **Get the handbook:** the `production` version of the prompt `robin/handbook` in Langfuse. The handbook lives there like any other prompt, with its version history. (The starting version is `source-docs/handbook.md`.)
 2. **Preprocess:** tidy the text.
 3. **Chunk:** cut it into chunks, one per section.
-4. **Embed:** turn every chunk into an embedding, a list of numbers that captures its meaning (OpenAI `text-embedding-3-small`).
+4. **Embed:** turn every chunk into an embedding, a list of numbers that captures its meaning (OpenAI `text-embedding-3-small` — this is the one step that is not Claude, because Anthropic has no embeddings model).
 5. **Store:** replace the old chunks in the table `handbook_chunks` in the content database (Postgres with pgvector).
 
 Each run shows up in Langfuse as the trace "Ingestion – customer handbook", in the environment `ingestion`.
@@ -152,7 +156,7 @@ Because the trace contains guardrail and agent steps, Langfuse also draws it as 
 
 **A guardrail step's output is just its result:** PASS, BLOCK, MASKED or ERROR. So in a table of steps, the Output column shows at a glance which guardrail fired. The small-model call inside it (`Injection check (small model)`, `Facts check (small model)`) shows what the model actually answered.
 
-**The turn itself carries a summary** in its metadata, starting with `outcome` and `what_happened` (one sentence), then `step_1_bank_account_check`, `step_2_injection_check`, `step_4_facts_check`, `rewrite_needed`, `guardrails_switched_off`, and the settings: `robin_model`, `reasoning_effort` and `guardrail_model`. These sit on the turn only, not on every step.
+**The turn itself carries a summary** in its metadata, starting with `outcome` and `what_happened` (one sentence), then `step_1_bank_account_check`, `step_2_injection_check`, `step_4_facts_check`, `rewrite_needed`, `guardrails_switched_off`, and the settings: `robin_model`, `effort` and `guardrail_model`. These sit on the turn only, not on every step.
 
 The model calls (steps 3 and 5, and the small-model checks) are **linked to their prompt** in Langfuse, with its version number. Click the prompt name to open it.
 
@@ -190,7 +194,7 @@ Robin's prompts live in Langfuse's **Prompt Management**, in the folder `robin/`
 | Input / Output | The customer's message and Robin's final answer, as plain text |
 | User | The name or nickname the participant typed, so everyone can find their own chats |
 | Session | One ID per chat window. Open the **Sessions** view to read a whole conversation |
-| Tags | `robin` and the model, such as `model: gpt-6-sol`. Filter on this to compare models |
+| Tags | `robin` and the model, such as `model: claude-sonnet-5-5`. Filter on this to compare models |
 | Scores | `outcome` and `user feedback` on the turn; each `guardrail:` score on its own guardrail step; your `eval:` scores |
 | Metadata | On the turn: `outcome` first, then the step results and settings. On a guardrail step: `result` first |
 | Latency / Cost | How long a turn took, and its token cost (cost only appears once Langfuse knows the model's price) |
@@ -199,10 +203,10 @@ All traces are sent with the environment `course`, so they're easy to keep apart
 
 ## Privacy and costs
 
-- Bank account numbers are removed **before** anything is sent to OpenAI or Langfuse. Other personal data is not. Ask participants not to type real personal details.
+- Bank account numbers are removed **before** anything is sent to Anthropic, OpenAI or Langfuse. Other personal data is not. Ask participants not to type real personal details.
 - The participant's nickname is stored in Langfuse as the user. Tell participants this, as the course settings panel does.
-- Robin runs in the EU (Render's Frankfurt region), but conversations are sent to OpenAI and to Langfuse. Choose Langfuse's EU region (`https://cloud.langfuse.com`) to keep traces in the EU.
-- Each chat is limited to 40 messages (`MAX_MESSAGES_PER_CHAT`). The conversation is kept in the browser, so a determined participant could get around this limit: set spending limits at OpenAI rather than relying on it. Most messages make three model calls: two on the small Luna model and one on Robin's model. A retry after a blocked answer adds two more. A blocked injection attempt costs only one small call.
+- Robin runs in the EU (Render's Frankfurt region), but conversations are sent to Anthropic, to OpenAI (the search query only, for its embedding) and to Langfuse. Choose Langfuse's EU region (`https://cloud.langfuse.com`) to keep traces in the EU.
+- Each chat is limited to 40 messages (`MAX_MESSAGES_PER_CHAT`). The conversation is kept in the browser, so a determined participant could get around this limit: set spending limits at Anthropic rather than relying on it. Most messages make three model calls: two on Claude Haiku 5.5 and one on Robin's model. A retry after a blocked answer adds two more. A blocked injection attempt costs only one small call. At Haiku's and Sonnet's prices a turn costs well under a cent, so a whole cohort is a few euros.
 
 ## Design choices you can discuss with participants
 
@@ -217,7 +221,7 @@ These are deliberate, so participants can find and improve them:
 ## Changing Robin
 
 - **Prompts:** edit them in Langfuse (see "Prompts in Langfuse" above). The fixed fallback messages, and the starting versions of the prompts, are in `prompts.py`.
-- **Models:** the environment variables `ROBIN_MODEL`, `COMPARE_MODEL`, `GUARDRAIL_MODEL` and `GUARDRAIL_EFFORT`, in your Render project settings (redeploy afterwards). Check the exact model names in your OpenAI account: the defaults are `gpt-6-sol`, `gpt-4.1-mini` and `gpt-6-luna`. GPT-4.1 mini leaves the OpenAI API on January 14, 2027.
+- **Models:** the environment variables `ROBIN_MODEL`, `COMPARE_MODEL`, `GUARDRAIL_MODEL` and `GUARDRAIL_EFFORT`, in your Render project settings (redeploy afterwards). The defaults are `claude-sonnet-5-5` for Robin and `claude-haiku-5-5` for both the comparison and the guardrails. `GUARDRAIL_EFFORT` and the course panel's effort setting take `low`, `medium`, `high`, `xhigh` or `max`; every Claude model accepts one, so the setting applies to both models in the switch.
 - **The chat widget:** you don't need to. `public/index.html` is the built widget, committed and ready to deploy. To restyle it, the source is in `instructor/widget/` (React with assistant-ui): run `npm install` and `npm run build` there. That rebuilds `public/index.html`, the single page Render serves. `npm run build:preview` makes a version with scripted answers, for showing the design without keys.
 - **Logic and tracing:** `robin.py`.
 

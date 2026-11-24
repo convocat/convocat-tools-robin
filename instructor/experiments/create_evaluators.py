@@ -13,7 +13,8 @@ Two rules are created:
   when you want live scoring; every judgement is a paid model call.
 
 Uses LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY and LANGFUSE_BASE_URL from .env or the environment.
-The judges run on JUDGE_MODEL (default gpt-6-luna) through the project's OpenAI LLM connection.
+The judges run on JUDGE_MODEL (default claude-haiku-5-5) through an LLM connection you add in
+the Langfuse UI yourself (Settings > LLM Connections) - this script does not create one.
 """
 
 from __future__ import annotations
@@ -50,7 +51,7 @@ from langfuse.api.evaluators.types.evaluator_model_config import EvaluatorModelC
 
 EVALUATORS_FILE = ROOT / "instructor" / "EVALUATORS.md"
 DATASET = "robin-experiment"
-JUDGE_MODEL = os.getenv("JUDGE_MODEL", "gpt-6-luna")
+JUDGE_MODEL = os.getenv("JUDGE_MODEL", "claude-haiku-5-5")
 
 # Which evaluators each rule uses. Names as in EVALUATORS.md.
 EXPERIMENT_EVALS = [

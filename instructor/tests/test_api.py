@@ -19,7 +19,8 @@ from test_robin import FakeClient  # noqa: E402
 @pytest.fixture
 def client(monkeypatch):
     api.COURSE_PASSCODE = "nest"
-    monkeypatch.setattr(api, "client", FakeClient())
+    monkeypatch.setattr(api, "chat_client", FakeClient())
+    monkeypatch.setattr(api, "embed_client", FakeClient())
     flushes = []
     monkeypatch.setattr(api, "get_client", lambda: type("C", (), {"flush": lambda self: flushes.append(1)})())
     test_client = api.app.test_client()
@@ -29,7 +30,7 @@ def client(monkeypatch):
 
 def chat(client, **overrides):
     body = {"message": "Can I return a vase?", "history": [], "name": "Maaike", "passcode": "nest",
-            "model": "GPT-6 Sol", "effort": "low", "session_id": "s1", **overrides}
+            "model": "Claude Sonnet 5.5", "effort": "low", "session_id": "s1", **overrides}
     return client.post("/api/chat", json=body)
 
 

@@ -59,5 +59,6 @@ each time:
   ≥0.5 similarity, orange below, the same threshold convention as the Montferland debug panel's
   RAG Scores.
 - Two Langfuse experiment runs exist for the full 51-item test set with look-up on: guardrails on
-  and guardrails off, both on GPT-6 Sol.
+  and guardrails off, both on GPT-6 Sol - those runs predate the move to Claude, so their model
+  differs from what Robin runs today.
 

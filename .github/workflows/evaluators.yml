@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       judge_model:
-        description: "Model the judges run on (through your OpenAI LLM connection in Langfuse)"
+        description: "Model the judges run on (through an LLM connection you set up in Langfuse)"
         type: string
-        default: "gpt-6-luna"
+        default: "claude-haiku-5-5"
 
 permissions:
   contents: read

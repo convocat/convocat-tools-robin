@@ -40,6 +40,14 @@ Things that look like bugs and are course material. Leave them in.
   `DATABASE_URL` is set, so there is one code path to maintain and the retrieval span looks the
   same in both. Content edits need a redeploy on the student path; acceptable, because students
   are working in Claude Code anyway.
+- **Add an Anthropic LLM connection in Langfuse, for the judges.** The evaluators now default to
+  `claude-haiku-5-5` (`JUDGE_MODEL`), but an LLM-as-a-judge evaluator runs on a connection
+  configured in the Langfuse UI under Settings > LLM Connections. Until an Anthropic connection
+  exists there, the judges will fail. This is deliberately a by-hand step: nothing in this repo
+  creates Langfuse connections.
+- **Put `ANTHROPIC_API_KEY` where Robin runs.** Needed in `.env` locally, in Render's environment,
+  and as a GitHub Actions secret for the experiment workflow. Robin still starts without it and
+  fails on the first message, so the symptom is a broken chat rather than a boot failure.
 - **Give Robin a real escalation path.** When a customer insists on a human (seen for real in the
   traces — "I need to talk with a human agent" x3), Robin has no contact info to offer: the
   default system prompt only injects `RETURN_POLICY`, not Customer Care's hours/channel.
@@ -67,6 +75,24 @@ Things that look like bugs and are course material. Leave them in.
 
 ## Done
 
+- 2026-11-24 — Robin runs on Claude. Claude Sonnet 5.5 writes the answers; Claude Haiku 5.5 runs
+  the guardrails, the query rewrite, the comparison model and the judges, at about a twentieth of
+  Sonnet's per-token price - so the course's "big model answers, small model checks" distinction
+  stays visible and a cohort costs a few euros. OpenAI stays, for embeddings only: Anthropic has no
+  embeddings model, and the look-up has to embed the customer's question on every turn.
+  Maaike's reason for switching was that students need an API key either way, and a course taught
+  in Claude Code may as well run on Claude. Worth remembering: a Claude Pro or Max subscription is
+  NOT API access, so this did not shorten the prerequisites - it changed vendor and added a line.
+  The port went through one seam, `_chat` in `robin.py`, which also now splits the system prompt
+  out of the message list the way Claude's API wants it - the trace still records the whole list,
+  so a step reads in Langfuse exactly as it did before. `reasoning_effort` became `effort`
+  everywhere (code, metadata and docs), mapped onto Claude's `output_config.effort`; every Claude
+  model accepts one, so the course panel's effort setting now applies to both models in the switch
+  instead of only the big one, and the widget's dropdown is no longer disabled for the second
+  model. `MAX_ANSWER_TOKENS` (8192) is new because Claude requires a ceiling and thinking tokens
+  count towards it. The widget was rebuilt, since the model labels travel from the browser.
+  Verified: 65 offline tests, and the request shape accepted by the SDK as far as authentication.
+  NOT verified: a real answer from Claude - there was no `ANTHROPIC_API_KEY` in `.env`.
 - 2026-11-24 — Dashboard: a RAG & Guardrails tab (one record per chat turn, for course chats and
   experiment runs: each guardrail's result, the look-up matches, the outcome and the `eval:`
   scores) plus an NL/EN language toggle with a full English string table. Data comes from the new

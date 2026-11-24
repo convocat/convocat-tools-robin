@@ -45,13 +45,28 @@ import prompts
 APP_VERSION = "robin-v2"
 
 # Model names come from environment variables, so you can change them without editing code.
+# Robin answers on Claude Sonnet 5.5. The guardrails, the query rewrite and the comparison model
+# run on Claude Haiku 5.5, which costs about a twentieth as much per token - so the course's
+# "big model answers, small model checks" distinction stays visible in the trace and stays cheap.
+DEFAULT_ROBIN_MODEL = "claude-sonnet-5-5"
+DEFAULT_SMALL_MODEL = "claude-haiku-5-5"
+DEFAULT_MODEL_LABEL = "Claude Sonnet 5.5"
 ROBIN_MODELS = {
-    "GPT-6 Sol": os.getenv("ROBIN_MODEL", "gpt-6-sol"),
-    "GPT-4.1 mini": os.getenv("COMPARE_MODEL", "gpt-4.1-mini"),
+    DEFAULT_MODEL_LABEL: os.getenv("ROBIN_MODEL", DEFAULT_ROBIN_MODEL),
+    "Claude Haiku 5.5": os.getenv("COMPARE_MODEL", DEFAULT_SMALL_MODEL),
 }
-REASONING_MODELS = {os.getenv("ROBIN_MODEL", "gpt-6-sol")}  # models that accept reasoning_effort
-GUARDRAIL_MODEL = os.getenv("GUARDRAIL_MODEL", "gpt-6-luna")
+GUARDRAIL_MODEL = os.getenv("GUARDRAIL_MODEL", DEFAULT_SMALL_MODEL)
 GUARDRAIL_EFFORT = os.getenv("GUARDRAIL_EFFORT", "low")
+
+# Claude's effort levels. Every Claude model accepts one, so unlike the old set-up there is no
+# "only this model supports it" case: the course panel's effort setting always applies.
+EFFORT_LEVELS = ("low", "medium", "high", "xhigh", "max")
+DEFAULT_EFFORT = "medium"
+
+# Claude needs a token ceiling for every answer, and thinking tokens count towards it. Robin's
+# answers are short, so this is generous on purpose: output is billed per token used, not per
+# token allowed, and too low a ceiling truncates an answer mid-sentence.
+MAX_ANSWER_TOKENS = int(os.getenv("MAX_ANSWER_TOKENS", "8192"))
 
 # The guardrails that can be switched off in the course panel, with the names shown in Langfuse.
 GUARDRAILS = {
@@ -222,26 +237,43 @@ def _chat(client, *, name: str, model: str, messages: list[dict], effort: str | 
           metadata: dict | None = None, prompt=None) -> str:
     """One LLM call, recorded in Langfuse as a generation named `name`.
 
-    We record it ourselves instead of using the automatic OpenAI integration, so the trace only shows
-    the settings we actually send (the integration also lists default values such as temperature,
-    which would confuse newcomers: GPT-6 doesn't use temperature when reasoning is on).
+    We record it ourselves instead of using an automatic integration, so the trace only shows the
+    settings we actually send. Claude takes the system prompt as its own field instead of as the
+    first message, so this is where that gets split off; the trace still records the whole message
+    list, so a step reads in Langfuse exactly as it did before.
     """
-    kwargs = {"model": model, "messages": messages}
+    system, turns = _split_system(messages)
+    kwargs = {"model": model, "max_tokens": MAX_ANSWER_TOKENS, "messages": turns}
+    if system:
+        kwargs["system"] = system
     if effort:
-        kwargs["reasoning_effort"] = effort
+        kwargs["output_config"] = {"effort": effort}
     with get_client().start_as_current_observation(
         as_type="generation", name=name, model=model, input=messages, metadata=metadata, prompt=prompt,
-        model_parameters={"reasoning_effort": effort} if effort else {},
+        model_parameters={"effort": effort} if effort else {},
     ) as generation:
-        response = client.chat.completions.create(**kwargs)
-        text = response.choices[0].message.content or ""
+        response = client.messages.create(**kwargs)
+        # Claude answers with a list of blocks. Thinking blocks come back with empty text unless
+        # they are asked for, so take the text blocks only.
+        text = "".join(block.text for block in response.content if block.type == "text")
         usage = getattr(response, "usage", None)
         generation.update(
             output=text,
-            usage_details={"input_tokens": usage.prompt_tokens, "output_tokens": usage.completion_tokens}
+            usage_details={"input_tokens": usage.input_tokens, "output_tokens": usage.output_tokens}
             if usage else None,
         )
     return text
+
+
+def _split_system(messages: list[dict]) -> tuple[str, list[dict]]:
+    """Split the system prompt out of the message list, the way Claude's API wants it."""
+    system = "".join(item["content"] for item in messages if item["role"] == "system")
+    return system, [item for item in messages if item["role"] != "system"]
+
+
+def _effort(value) -> str:
+    """One of Claude's effort levels. Anything else the browser sends becomes the default."""
+    return value if value in EFFORT_LEVELS else DEFAULT_EFFORT
 
 
 def _clean_history(history: list[dict]) -> list[dict]:
@@ -274,8 +306,9 @@ def handle_turn(
     history: list[dict],
     *,
     client,
-    robin_model_label: str = "GPT-6 Sol",
-    reasoning_effort: str = "medium",
+    embed_client=None,
+    robin_model_label: str = DEFAULT_MODEL_LABEL,
+    effort: str = DEFAULT_EFFORT,
     participant: str = "anonymous",
     session_id: str = "no-session",
     guardrails: dict | None = None,
@@ -287,7 +320,8 @@ def handle_turn(
     on = guardrail_switches(guardrails)
     switched_off = [label for key, label in GUARDRAILS.items() if not on[key]]
     langfuse = get_client()
-    robin_model = ROBIN_MODELS.get(robin_model_label, ROBIN_MODELS["GPT-6 Sol"])
+    robin_model = ROBIN_MODELS.get(robin_model_label, ROBIN_MODELS[DEFAULT_MODEL_LABEL])
+    embed_client = embed_client if embed_client is not None else client
     look_up = look_up is True
     max_results = lookup.max_results(max_results)
     label = prompt_label(label)
@@ -297,10 +331,10 @@ def handle_turn(
         facts_prompt, facts_link = _text("robin/facts-check", return_policy=policy)
         checks = {"facts": (facts_prompt, facts_link), "retry_note": "robin/retry-note", "facts_step": STEPS["facts"]}
     injection_prompt, injection_link = _text("robin/injection-check")
-    effort = reasoning_effort if robin_model in REASONING_MODELS else None
+    effort = _effort(effort)
 
-    # Guardrail 1 runs BEFORE anything is traced, so bank account numbers never reach Langfuse or OpenAI.
-    # Switched off, the message goes to OpenAI and Langfuse exactly as typed.
+    # Guardrail 1 runs BEFORE anything is traced, so bank account numbers never reach Langfuse or
+    # the model. Switched off, the message goes to the model and Langfuse exactly as typed.
     masked_message, bank_accounts_found = mask_bank_accounts(message) if on["bank_account"] else (message, 0)
     # The browser sends the earlier messages as typed, so mask those too before anything sees them.
     history = _clean_history(history)
@@ -331,7 +365,7 @@ def handle_turn(
             result.summary["look_up"] = f"on, max {max_results} sections" if look_up else "off"
             result.details["settings"] = {
                 "robin_model": robin_model,
-                "reasoning_effort": effort or "not used",
+                "effort": effort,
                 "guardrail_model": GUARDRAIL_MODEL,
             }
 
@@ -355,7 +389,8 @@ def handle_turn(
 
             # --- Look-up (only when switched on): find the handbook sections for this question ---
             if look_up:
-                sources = _look_up(client, langfuse, masked_message, history, max_results, result)
+                sources = _look_up(client, embed_client, langfuse, masked_message, history,
+                                   max_results, result)
                 system_prompt, system_link = _text("robin/system-prompt-lookup", label, sources=sources)
                 facts_prompt, facts_link = _text("robin/facts-check-lookup", sources=sources)
                 checks = {"facts": (facts_prompt, facts_link), "retry_note": "robin/retry-note-lookup",
@@ -452,8 +487,8 @@ def _injection_step(client, langfuse, masked_message: str, injection_prompt: str
     return result, explanation, language
 
 
-def _look_up(client, langfuse, masked_message: str, history: list[dict], max_results: int,
-             result: TurnResult) -> str:
+def _look_up(client, embed_client, langfuse, masked_message: str, history: list[dict],
+             max_results: int, result: TurnResult) -> str:
     """The look-up (RAG): rewrite the question into a search query, then search the content database.
 
     Returns the handbook sections as text for Robin's system prompt. Two steps in the trace:
@@ -486,7 +521,7 @@ def _look_up(client, langfuse, masked_message: str, history: list[dict], max_res
                 as_type="embedding", name="Turn the search query into numbers (embedding)",
                 model=lookup.EMBEDDING_MODEL, input=query,
             ) as embedding:
-                vectors, tokens = lookup.embed(client, [query])
+                vectors, tokens = lookup.embed(embed_client, [query])
                 embedding.update(output=f"{len(vectors[0])} numbers", usage_details={"input_tokens": tokens})
             hits = lookup.search(vectors[0], max_results)
             sections = [{"section": hit.section, "similarity": round(hit.similarity, 3), "text": hit.text}

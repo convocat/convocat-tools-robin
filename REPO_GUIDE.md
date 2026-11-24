@@ -45,9 +45,9 @@ these have to stay in the same repo as the code they act on.
               ┌──────────────────────────────────────────────┘   │   │
               ▼                                                  ▼   ▼
       ┌───────────────┐        ┌──────────────────────┐   ┌────────────┐
-      │ OpenAI        │        │ Langfuse             │   │ Postgres   │
-      │ (models,      │        │ prompts · traces ·   │   │ (handbook  │
-      │  embeddings)  │        │ scores · datasets    │   │  chunks)   │
+      │ Anthropic     │        │ Langfuse             │   │ Postgres   │
+      │ (Claude) and  │        │ prompts · traces ·   │   │ (handbook  │
+      │ OpenAI (embed)│        │ scores · datasets    │   │  chunks)   │
       └───────────────┘        └──────────▲───────────┘   └─────▲──────┘
                                           │                     │
           reads traces ─ instructor/dashboard-kit/      ingestion/ingest_handbook.py
@@ -180,7 +180,8 @@ The repo is only the code. Robin depends on these services:
 
 | Service | What it holds or does | Where you manage it |
 |---|---|---|
-| **OpenAI** | The models: GPT-6 Sol (Robin), GPT-4.1 mini (comparison), GPT-6 Luna (guardrails and judges), text-embedding-3-small (embeddings) | platform.openai.com: keys and spending limits |
+| **Anthropic** | The models: Claude Sonnet 5.5 (Robin), Claude Haiku 5.5 (comparison, guardrails and judges) | platform.claude.com: keys and spending limits. A Pro/Max subscription is not an API key |
+| **OpenAI** | Embeddings only (`text-embedding-3-small`), because Anthropic has no embeddings model | platform.openai.com: keys and spending limits |
 | **Langfuse** | Prompts, traces, scores, datasets, experiments, evaluators | cloud.langfuse.com |
 | **Render** | Hosts Robin and the Postgres content database | dashboard.render.com |
 | **GitHub** | Stores the code and runs the three Actions | github.com: the repo's **Actions** tab |
@@ -203,13 +204,15 @@ These are set in `.env` locally, or in Render's project settings online.
 
 | Setting | What it controls | Default |
 |---|---|---|
-| `OPENAI_API_KEY` | Access to OpenAI | — |
+| `ANTHROPIC_API_KEY` | Access to Claude: answers and guardrails | — |
+| `OPENAI_API_KEY` | Access to OpenAI, for embeddings only | — |
 | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | Access to your Langfuse project | — |
 | `LANGFUSE_BASE_URL` | Langfuse region | `https://cloud.langfuse.com` (EU) |
 | `LANGFUSE_TRACING_ENVIRONMENT` | Label that keeps course traces apart | `course` |
-| `ROBIN_MODEL` | Robin's main model | `gpt-6-sol` |
-| `COMPARE_MODEL` | The second model in the model switch | `gpt-4.1-mini` |
-| `GUARDRAIL_MODEL` | Small model for guardrails | `gpt-6-luna` |
+| `ROBIN_MODEL` | Robin's main model | `claude-sonnet-5-5` |
+| `COMPARE_MODEL` | The second model in the model switch | `claude-haiku-5-5` |
+| `GUARDRAIL_MODEL` | Small model for guardrails | `claude-haiku-5-5` |
+| `MAX_ANSWER_TOKENS` | Token ceiling per answer (thinking counts towards it) | `8192` |
 | `GUARDRAIL_EFFORT` | Reasoning effort for the guardrail model | `low` |
 | `MAX_MESSAGES_PER_CHAT` | Message limit per chat window | `40` |
 | `COURSE_PASSCODE` | Word participants need to use Robin | empty |
@@ -228,7 +231,7 @@ Type these in a terminal opened in the repo folder, or simply ask Claude Code to
 | `python app.py` | Starts Robin locally by hand |
 | `python -m pytest instructor/tests` | Runs all automatic tests (free: uses a fake model) |
 | `npm install` then `npm run build` (inside `instructor/widget/`) | Rebuilds the widget into `public/index.html` |
-| `python instructor/experiments/run_experiment.py --model "GPT-6 Sol" --guardrails on` | Runs an experiment from your laptop (costs OpenAI credits) |
+| `python instructor/experiments/run_experiment.py --model "Claude Sonnet 5.5" --guardrails on` | Runs an experiment from your laptop (costs Anthropic credits) |
 | `git status` | Shows which files you've changed but not yet saved to history |
 
 ---

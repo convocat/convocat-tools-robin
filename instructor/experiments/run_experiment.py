@@ -4,10 +4,10 @@ First time (uploads the 51 items in robin-dataset.json, and a chat prompt for UI
     python instructor/experiments/run_experiment.py --upload
 
 Then one run per setting you want to compare, for example:
-    python instructor/experiments/run_experiment.py --model "GPT-6 Sol" --guardrails on
-    python instructor/experiments/run_experiment.py --model "GPT-6 Sol" --guardrails off
-    python instructor/experiments/run_experiment.py --model "GPT-4.1 mini" --guardrails on
-    python instructor/experiments/run_experiment.py --model "GPT-6 Sol" --guardrails injection,facts
+    python instructor/experiments/run_experiment.py --model "Claude Sonnet 5.5" --guardrails on
+    python instructor/experiments/run_experiment.py --model "Claude Sonnet 5.5" --guardrails off
+    python instructor/experiments/run_experiment.py --model "Claude Haiku 5.5" --guardrails on
+    python instructor/experiments/run_experiment.py --model "Claude Sonnet 5.5" --guardrails injection,facts
 
 Every run appears in Langfuse under Experiments. The checks live in Langfuse as evaluators (see
 instructor/experiments/README.md): the code evaluator "Robin – form checks" and the judge. Add --local-checks to
@@ -172,7 +172,7 @@ def make_task(client, model_label: str, effort: str, guardrails: dict[str, bool]
         data = item.input if hasattr(item, "input") else item["input"]
         result = robin.handle_turn(
             data["message"], data.get("history") or [], client=client, robin_model_label=model_label,
-            reasoning_effort=effort, participant=user, session_id=run_name, guardrails=guardrails,
+            effort=effort, participant=user, session_id=run_name, guardrails=guardrails,
             look_up=look_up, max_results=max_results,
         )
         return result.answer
@@ -187,7 +187,7 @@ def guardrail_label(guardrails: dict[str, bool]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--upload", action="store_true", help="upload the dataset and the UI chat prompt, then stop")
-    parser.add_argument("--model", default="GPT-6 Sol", choices=list(robin.ROBIN_MODELS), help="Robin's model")
+    parser.add_argument("--model", default=robin.DEFAULT_MODEL_LABEL, choices=list(robin.ROBIN_MODELS), help="Robin's model")
     parser.add_argument("--effort", default="medium", help="reasoning effort (only for reasoning models)")
     parser.add_argument("--guardrails", default="on",
                         help="on, off, or a list such as injection,facts (bank_account, injection, facts)")
@@ -205,6 +205,7 @@ def main() -> None:
         upload()
         return
 
+    from anthropic import Anthropic
     from openai import OpenAI
 
     guardrails = parse_guardrails(args.guardrails)
@@ -222,10 +223,10 @@ def main() -> None:
     result = dataset.run_experiment(
         name="Robin", run_name=run_name,
         description=f"Robin on {model_id}, guardrails {guardrail_label(guardrails)}, {look_up_label}",
-        task=make_task(OpenAI(), args.model, args.effort, guardrails, run_name, args.user,
+        task=make_task(Anthropic(), args.model, args.effort, guardrails, run_name, args.user,
                         args.look_up, args.max_results),
         evaluators=EVALUATORS if args.local_checks else [], max_concurrency=args.concurrency,
-        metadata={"model": model_id, "reasoning_effort": effort, "guardrails": guardrail_label(guardrails),
+        metadata={"model": model_id, "effort": effort, "guardrails": guardrail_label(guardrails),
                   "started_by": args.user, "look_up": args.look_up, "max_results": args.max_results},
     )
     langfuse.flush()
