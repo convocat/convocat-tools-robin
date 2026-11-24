@@ -1,4 +1,4 @@
-# Runs Robin on the experiment dataset in Langfuse (experiments/run_experiment.py).
+# Runs Robin on the experiment dataset in Langfuse (instructor/experiments/run_experiment.py).
 # Start it under Actions > "Run Robin experiment" > Run workflow.
 # Needs three repository secrets (Settings > Secrets and variables > Actions):
 #   OPENAI_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY
@@ -66,11 +66,11 @@ jobs:
       - name: Run the experiment
         run: |
           if [ "$RUNS" = "one run" ]; then
-            python experiments/run_experiment.py --model "$MODEL" --guardrails "$GUARDRAILS" --effort "$EFFORT" --user "$RUN_USER"
+            python instructor/experiments/run_experiment.py --model "$MODEL" --guardrails "$GUARDRAILS" --effort "$EFFORT" --user "$RUN_USER"
           else
             for model in "GPT-6 Sol" "GPT-4.1 mini"; do
               for guardrails in on off; do
-                python experiments/run_experiment.py --model "$model" --guardrails "$guardrails" --effort "$EFFORT" --user "$RUN_USER"
+                python instructor/experiments/run_experiment.py --model "$model" --guardrails "$guardrails" --effort "$EFFORT" --user "$RUN_USER"
               done
             done
           fi

@@ -1,5 +1,5 @@
-# Creates Robin's LLM-as-a-Judge evaluators in Langfuse, from the prompts in EVALUATORS.md
-# (experiments/create_evaluators.py). Evaluators and rules that already exist are left alone.
+# Creates Robin's LLM-as-a-Judge evaluators in Langfuse, from the prompts in instructor/EVALUATORS.md
+# (instructor/experiments/create_evaluators.py). Evaluators and rules that already exist are left alone.
 # Start it under Actions > "Set up Langfuse evaluators" > Run workflow.
 # Uses the same repository secrets as the experiment workflow.
 name: Set up Langfuse evaluators
@@ -36,4 +36,4 @@ jobs:
           done
       - run: pip install -r requirements.txt
       - name: Create the evaluators and rules
-        run: python experiments/create_evaluators.py
+        run: python instructor/experiments/create_evaluators.py

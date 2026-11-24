@@ -1,4 +1,4 @@
-"""Tests for the Langfuse code evaluator (experiments/code_evaluator_form_checks.py).
+"""Tests for the Langfuse code evaluator (instructor/experiments/code_evaluator_form_checks.py).
 
 Langfuse provides EvaluationContext, EvaluationResult and Score when it runs the code;
 here we provide simple stand-ins with the same fields.

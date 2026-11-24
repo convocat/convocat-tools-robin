@@ -1,10 +1,11 @@
-"""The Nest & Co help centre: the customer handbook and the product guide as web pages.
+"""The Nest & Co help centre: the source documents in source-docs/ as web pages.
 
 Every section has its own link (for example /help/handbook#returns), so a chatbot that cites a
 section can link to it. The links are also written at the end of each section in the documents
 that go into the data sources, so the link travels with the chunk.
 
-The internal Customer Care playbook is deliberately not published here.
+Not every source document is published: the internal Customer Care playbook is deliberately
+left out of DOCUMENTS, so Robin can be given a document the website does not show.
 """
 
 from __future__ import annotations
@@ -24,11 +25,11 @@ def slugify(value: str, separator: str) -> str:
     plain_letters = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode()
     return slugify_unicode(plain_letters, separator)
 
-CONTENT = Path(__file__).parent / "content"
+SOURCE_DOCS = Path(__file__).parent / "source-docs"
 DOCUMENTS = {
-    "faq": ("Frequently asked questions", CONTENT / "faq.md"),
-    "handbook": ("Customer handbook", CONTENT / "handbook.md"),
-    "product-guide": ("Product guide", CONTENT / "product-guide.md"),
+    "faq": ("Frequently asked questions", SOURCE_DOCS / "faq.md"),
+    "handbook": ("Customer handbook", SOURCE_DOCS / "handbook.md"),
+    "product-guide": ("Product guide", SOURCE_DOCS / "product-guide.md"),
 }
 
 PAGE = """<!doctype html>

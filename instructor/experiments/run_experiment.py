@@ -1,16 +1,16 @@
 """Run Robin on the experiment dataset in Langfuse, with a chosen model and guardrail setting.
 
 First time (uploads the 51 items in robin-dataset.json, and a chat prompt for UI experiments):
-    python experiments/run_experiment.py --upload
+    python instructor/experiments/run_experiment.py --upload
 
 Then one run per setting you want to compare, for example:
-    python experiments/run_experiment.py --model "GPT-6 Sol" --guardrails on
-    python experiments/run_experiment.py --model "GPT-6 Sol" --guardrails off
-    python experiments/run_experiment.py --model "GPT-4.1 mini" --guardrails on
-    python experiments/run_experiment.py --model "GPT-6 Sol" --guardrails injection,facts
+    python instructor/experiments/run_experiment.py --model "GPT-6 Sol" --guardrails on
+    python instructor/experiments/run_experiment.py --model "GPT-6 Sol" --guardrails off
+    python instructor/experiments/run_experiment.py --model "GPT-4.1 mini" --guardrails on
+    python instructor/experiments/run_experiment.py --model "GPT-6 Sol" --guardrails injection,facts
 
 Every run appears in Langfuse under Experiments. The checks live in Langfuse as evaluators (see
-experiments/README.md): the code evaluator "Robin – form checks" and the judge. Add --local-checks to
+instructor/experiments/README.md): the code evaluator "Robin – form checks" and the judge. Add --local-checks to
 also score the four form checks from this script, for when they aren't set up in Langfuse.
 
 Uses the same .env as Robin: OPENAI_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_BASE_URL.
@@ -25,7 +25,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 for stream in (sys.stdout, sys.stderr):  # Windows consoles default to cp1252, which can't print emoji

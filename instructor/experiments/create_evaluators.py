@@ -1,7 +1,7 @@
 """Create Robin's LLM-as-a-Judge evaluators in Langfuse, from the prompts in EVALUATORS.md.
 
-    python experiments/create_evaluators.py            # create the evaluators and rules
-    python experiments/create_evaluators.py --dry-run  # only show what would be created
+    python instructor/experiments/create_evaluators.py            # create the evaluators and rules
+    python instructor/experiments/create_evaluators.py --dry-run  # only show what would be created
 
 Every "## eval: ..." section in EVALUATORS.md with a prompt becomes one Boolean evaluator, so the
 evaluators in Langfuse always match the file. Evaluators and rules that already exist (same name)
@@ -24,7 +24,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv  # noqa: E402
@@ -48,7 +48,7 @@ from langfuse.api.evaluation_rules.types.evaluation_rule_evaluator_assignment_in
 from langfuse.api.evaluators.types.create_evaluator_request import CreateEvaluatorRequest_LlmAsJudge  # noqa: E402
 from langfuse.api.evaluators.types.evaluator_model_config import EvaluatorModelConfig  # noqa: E402
 
-EVALUATORS_FILE = ROOT / "EVALUATORS.md"
+EVALUATORS_FILE = ROOT / "instructor" / "EVALUATORS.md"
 DATASET = "robin-experiment"
 JUDGE_MODEL = os.getenv("JUDGE_MODEL", "gpt-6-luna")
 
@@ -130,7 +130,7 @@ def build_requests(prompts: dict[str, str], model) -> dict[str, CreateEvaluatorR
     for name, prompt in prompts.items():
         requests[name] = CreateEvaluatorRequest_LlmAsJudge(
             name=name,
-            description="Robin, the Nest & Co chatbot. Prompt from EVALUATORS.md in github.com/convocat/Robin.",
+            description="Robin, the Nest & Co chatbot. Prompt from EVALUATORS.md in github.com/convocat/convocat-tools-robin.",
             prompt=prompt,
             model_config_=model,
             variable_mapping=mapping_for(prompt),

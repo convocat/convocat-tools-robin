@@ -3,7 +3,7 @@
 This is the bottom row of the course slide "DocBot: from question to answer":
 
     1. Get the handbook       the 'production' version of the prompt robin/handbook in Langfuse
-                              (or content/handbook.md if Langfuse can't be reached)
+                              (or source-docs/handbook.md if Langfuse can't be reached)
     2. Preprocess             tidy the text: line endings, trailing spaces, extra blank lines
     3. Chunk                  cut it into chunks: one per section (## heading)
     4. Embed                  turn every chunk into an embedding with OpenAI
@@ -42,13 +42,13 @@ import robin  # noqa: E402
 def get_handbook() -> tuple[str, str]:
     """The handbook text and where it came from."""
     if os.getenv("LANGFUSE_PUBLIC_KEY"):
-        robin.seed_prompts()  # creates robin/handbook from content/handbook.md if it isn't in Langfuse yet
+        robin.seed_prompts()  # creates robin/handbook from source-docs/handbook.md if it isn't in Langfuse yet
         try:
             prompt = get_client().get_prompt("robin/handbook", label="production", cache_ttl_seconds=0)
             return prompt.prompt, f"Langfuse prompt robin/handbook, version {prompt.version}"
         except Exception as error:
-            print(f"Could not read robin/handbook from Langfuse ({error}); using content/handbook.md")
-    return prompts.HANDBOOK, "content/handbook.md in the repository"
+            print(f"Could not read robin/handbook from Langfuse ({error}); using source-docs/handbook.md")
+    return prompts.HANDBOOK, "source-docs/handbook.md in the repository"
 
 
 def preprocess(text: str) -> str:

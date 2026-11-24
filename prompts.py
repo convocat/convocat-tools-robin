@@ -97,7 +97,7 @@ Write a new answer that only uses facts from the return policy. If the policy do
 # Used only when "Look things up" is switched on in the course panel.
 # ---------------------------------------------------------------------------
 
-HANDBOOK = (Path(__file__).parent / "content" / "handbook.md").read_text(encoding="utf-8")
+HANDBOOK = (Path(__file__).parent / "source-docs" / "handbook.md").read_text(encoding="utf-8")
 
 QUERY_REWRITE_PROMPT = """## Role and task
 You turn a customer's latest chat message into a search query for the Nest & Co customer handbook.
