@@ -48,13 +48,15 @@ Things that look like bugs and are course material. Leave them in.
   the documented command fails in a fresh venv. Found on 2026-11-24 when the suite had to be run
   against a system Python that had langfuse 3.14.5 instead of the pinned 5.0.4, which failed one
   test for environment reasons alone. Wants a `requirements-dev.txt`.
-- **Add English language to the PO/CxD dashboard** (`dashboard-kit/`, currently Dutch-only UI).
-  Planned as a live-coding demo.
-- **Add an evals dashboard to the PO/CxD dashboard** (`dashboard-kit/`) — per-evaluator pass rate
-  across experiment runs, filterable by model and guardrail setting.
-- **Migrate `dashboard-kit/robin_adapter.py` off the deprecated Langfuse endpoints**
+- **Add an evals dashboard to the PO/CxD dashboard** (`instructor/dashboard-kit/`) — per-evaluator
+  pass rate across experiment runs, filterable by model and guardrail setting. Partly served now:
+  the RAG & Guardrails tab shows the `eval:` scores per chat turn, but not a pass rate aggregated
+  per evaluator, and not filterable by model or guardrail setting.
+- **Migrate `instructor/dashboard-kit/robin_adapter.py` off the deprecated Langfuse endpoints**
   (`/api/public/traces`, `/api/public/scores`) to `/api/public/v2/observations` and
   `/api/public/v3/scores` before Langfuse actually removes the old ones.
+  `instructor/dashboard-kit/guardrails_adapter.py` already uses the newer endpoints, so it is the
+  worked example to copy from.
 - **Decide what happens to the Beoordeling (review) panel in `thread-view/`.** It's UI-only right
   now — toggles don't persist. Either wire it to something, or keep it as a teaching mockup and
   say so clearly.
@@ -65,16 +67,25 @@ Things that look like bugs and are course material. Leave them in.
 
 ## Done
 
+- 2026-11-24 — Dashboard: a RAG & Guardrails tab (one record per chat turn, for course chats and
+  experiment runs: each guardrail's result, the look-up matches, the outcome and the `eval:`
+  scores) plus an NL/EN language toggle with a full English string table. Data comes from the new
+  `instructor/dashboard-kit/guardrails_adapter.py`, which uses Langfuse's v2/v3 endpoints instead
+  of the deprecated ones. Closes the English-language item.
+- 2026-11-24 — `dashboard-kit/` moved to `instructor/dashboard-kit/`, so the only folders a
+  student meets are Robin's own. Maaike decided it stays in this repo rather than going to a
+  course repo. The `.gitignore` entries moved with it — they are anchored at the repo root, so
+  without that the generated `dashboard-data.json` and `guardrails-data.json`, which hold real
+  participants' messages, would have stopped being ignored.
 - 2026-11-24 — Simplified the repo so a student can clone it and get a working Robin: Render is
   the only deploy path (`vercel.json` and the Vercel button gone), both deploy buttons now point at
   `convocat/convocat-tools-robin` instead of relying on the rename redirect from `convocat/Robin`,
   instructor material moved into `instructor/` (widget source, experiments, judge prompts,
-  teaching guide, tests), and `content/` renamed `source-docs/`. 64 tests pass. `dashboard-kit/`
-  stays in this repo by Maaike's decision; whether it also moves under `instructor/` is open.
+  teaching guide, tests), and `content/` renamed `source-docs/`. 64 tests pass.
 - Cloned the repo locally, wired up `.env`, confirmed Langfuse tracing end to end.
 - Connected the real Render Postgres for look-up (RAG); ran the ingestion pipeline.
 - Ran the 51-item experiment set with look-up on, guardrails on and off.
-- Built `dashboard-kit/`: Product Owner + conversation-log dashboard adapted from the Montferland
+- Built `instructor/dashboard-kit/`: Product Owner + conversation-log dashboard adapted from the Montferland
   dashboard-kit, with inline-expanding rows, an `@assistant-ui/react` thread view, and a
   Bronnen/Beoordeling panel matching the Waddinxveen reference.
 - Added the `robin-dashboard` skill to launch it on demand.

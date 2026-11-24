@@ -1,6 +1,6 @@
 ---
 name: robin-trace-to-persona
-description: "Pull real Robin conversations from Langfuse and summarize recurring user personas and intents for a content manager — not raw analytics, not a dashboard, a short written read of who's actually talking to Robin and what they want. Reuses dashboard-kit/dashboard-data.json when it's fresh instead of re-querying Langfuse. Triggers: '/robin-trace-to-persona', 'who's talking to Robin', 'summarize user personas', 'what are people actually asking'."
+description: "Pull real Robin conversations from Langfuse and summarize recurring user personas and intents for a content manager — not raw analytics, not a dashboard, a short written read of who's actually talking to Robin and what they want. Reuses instructor/dashboard-kit/dashboard-data.json when it's fresh instead of re-querying Langfuse. Triggers: '/robin-trace-to-persona', 'who's talking to Robin', 'summarize user personas', 'what are people actually asking'."
 ---
 
 # robin-trace-to-persona — turn real conversations into personas a content manager can use
@@ -10,7 +10,7 @@ to Robin and what they want, with real quotes — not a chart, not a trace-by-tr
 
 ## Step 1 — Get the data
 
-Check whether `dashboard-kit/dashboard-data.json` exists and is recent (compare its newest
+Check whether `instructor/dashboard-kit/dashboard-data.json` exists and is recent (compare its newest
 conversation's `time` against now). If it's stale or missing, run the `robin-dashboard` skill's
 Step 2 (`robin_adapter.py`) to refresh it rather than writing a second Langfuse query path — this
 repo already has one correct way to pull conversations; reuse it.

@@ -50,8 +50,8 @@ these have to stay in the same repo as the code they act on.
       │  embeddings)  │        │ scores · datasets    │   │  chunks)   │
       └───────────────┘        └──────────▲───────────┘   └─────▲──────┘
                                           │                     │
-                    reads traces ─ dashboard-kit/     ingestion/ingest_handbook.py
-                    runs datasets ─ instructor/experiments/      (fills the database)
+          reads traces ─ instructor/dashboard-kit/      ingestion/ingest_handbook.py
+         runs datasets ─ instructor/experiments/        (fills the database)
 ```
 
 ### What happens in code when someone presses send
@@ -151,12 +151,12 @@ Guardrails always use the `production` label. Only the system prompt follows a s
 
 | File | What it does |
 |---|---|
-| `dashboard-kit/robin_adapter.py` | Pulls traces from Langfuse and writes `dashboard-data.json` |
-| `dashboard-kit/dashboard-data.json` | The generated data. **Holds real participants' messages**, so it's deliberately kept out of GitHub. |
-| `dashboard-kit/data-contract.js` | Describes the shape the data must have, so the dashboard and adapter agree |
-| `dashboard-kit/dashboard.html` | The dashboard page itself (UI in Dutch for now) |
-| `dashboard-kit/server.js` | A small local server that shows the dashboard in your browser |
-| `dashboard-kit/thread-view/` | A separate mini-app that shows one conversation as a chat thread, with Bronnen (sources) and Beoordeling (review) panels |
+| `instructor/dashboard-kit/robin_adapter.py` | Pulls traces from Langfuse and writes `dashboard-data.json` |
+| `instructor/dashboard-kit/dashboard-data.json` | The generated data. **Holds real participants' messages**, so it's deliberately kept out of GitHub. |
+| `instructor/dashboard-kit/data-contract.js` | Describes the shape the data must have, so the dashboard and adapter agree |
+| `instructor/dashboard-kit/dashboard.html` | The dashboard page itself (UI in Dutch for now) |
+| `instructor/dashboard-kit/server.js` | A small local server that shows the dashboard in your browser |
+| `instructor/dashboard-kit/thread-view/` | A separate mini-app that shows one conversation as a chat thread, with Bronnen (sources) and Beoordeling (review) panels |
 
 ### Settings, deploy and housekeeping
 

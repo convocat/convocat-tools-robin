@@ -10,6 +10,6 @@ instructor/widget/dist-mock/
 trace-annotations/
 .trace-dashboard.yml
 *.log
-dashboard-kit/dashboard-data.json
-dashboard-kit/guardrails-data.json
-dashboard-kit/thread-view/dist/
+instructor/dashboard-kit/dashboard-data.json
+instructor/dashboard-kit/guardrails-data.json
+instructor/dashboard-kit/thread-view/dist/
