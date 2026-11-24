@@ -224,6 +224,7 @@ These are deliberate, so participants can find and improve them:
 - **No handover path.** Robin's system prompt doesn't say what to do when the policy has no answer. Only the facts check fallback offers a colleague.
 - **No date.** Robin doesn't know today's date, so it can't really check the 30-day window. A better design passes the date in, or lets code calculate it.
 - **Gaps in the policy.** Does a return with one damaged and one unused item cost €4.95? The policy doesn't say.
+- **The source documents contradict each other.** The free-shipping threshold is €50 in two places and €75 in two others, and the handbook's own changelog shows why: it was raised from €50 to €75 and the update was only half applied. This is deliberate. Contradictory information across documents is what happens in real life, and different people work from different handbooks — so a look-up answer depends on which chunk came back, and no amount of prompt engineering fixes an unreliable source. Ask participants which document they would trust, how they would notice that two chunks disagree, and whose job it is to fix it.
 - **Fail open vs fail closed.** If the injection check fails, the message is let through. If the facts check fails, the answer is not sent. Which is right for which guardrail?
 
 ## Changing Robin
