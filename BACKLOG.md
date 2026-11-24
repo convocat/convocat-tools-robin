@@ -28,11 +28,27 @@ Things that look like bugs and are course material. Leave them in.
 
 ## Open
 
-- **Add an Anthropic LLM connection in Langfuse, for the judges.** The evaluators now default to
-  `claude-haiku-5-5` (`JUDGE_MODEL`), but an LLM-as-a-judge evaluator runs on a connection
-  configured in the Langfuse UI under Settings > LLM Connections. Until an Anthropic connection
-  exists there, the judges will fail. This is deliberately a by-hand step: nothing in this repo
-  creates Langfuse connections.
+- **Add an Anthropic LLM connection in Langfuse, for the judges — and check the existing one.**
+  An LLM-as-a-judge evaluator names both a connection and a model, and the two have to agree.
+  Read-only inventory of the project on 2026-11-24 found:
+
+  - **One LLM connection**, whose provider name is `Jev` and adapter `typesafe`. Neither string
+    names a vendor, so `create_evaluators.py` cannot match it, and `claude-haiku-5-5` has nothing
+    to run on. Re-running the evaluator setup today falls back to the project's default evaluation
+    model instead.
+  - **The eight existing judges are pinned to `{provider: "OpenAI", model: "gpt-6-luna"}`**, from
+    when they were created on 29 Oct. No connection in the project is now named OpenAI. Whether
+    they still run depends on how Langfuse resolves that; the UI flags an unavailable model on the
+    evaluator, so **open one and look** before trusting any eval scores. This is not something
+    today's work caused — it predates it.
+  - All eight are `status: active`, not paused, and their variable mappings use the generic
+    `input` / `output` / `expected_output` sources rather than span names or metadata keys, so the
+    renames of 2026-11-24 do not touch them.
+
+  What to do: add an Anthropic connection (Settings > LLM Connections) if the judges should run on
+  Claude, or set `JUDGE_MODEL` to something the existing connection can serve. Either way, check
+  what `Jev` actually is first.
+
 - **Put `ANTHROPIC_API_KEY` where Robin runs.** Needed in `.env` locally, in Render's environment,
   and as a GitHub Actions secret for the experiment workflow. Robin still starts without it and
   fails on the first message, so the symptom is a broken chat rather than a boot failure.
@@ -51,6 +67,16 @@ Things that look like bugs and are course material. Leave them in.
   `robin_model` and `guardrail_model` keep their names but their values are Claude model ids now.
   The README's "What to show in the traces table" section describes a saved view for participants,
   which is the first one to re-check. Only Maaike can do this: saved views live in the UI.
+- **Two leftovers in the Langfuse project, found by the inventory on 2026-11-24.** Neither breaks
+  anything; both are tidying.
+  `robin/handbook` still exists with a `production` label but nothing reads it any more - the
+  corpus is `source-docs/` in the repo. A student who finds it will reasonably think editing it
+  changes what Robin knows. Either delete it or rename it so it reads as an archive.
+  The project also holds prompts from other work: `Lea/ashbrooke`, `Lorena / Error UX`,
+  `exercise_prompts/Truus`, `PHiipa sample prompt`, `examples/surify`, `maaike/hello-world`,
+  `maaike/promptname`, `maaike/surify`. So this is not a Robin-only project. Worth knowing before
+  deciding what a collaborator on it can see.
+
 - **Reword two look-up prompts in Langfuse: "handbook" -> "the documents".**
   `robin/system-prompt-lookup` and `robin/facts-check-lookup` both tell Robin it is working from
   "handbook sections". Since 2026-11-24 the corpus is three documents (handbook, product guide,

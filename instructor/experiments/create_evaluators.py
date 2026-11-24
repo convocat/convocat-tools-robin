@@ -102,17 +102,28 @@ def mapping_for(prompt: str) -> list[PromptVariableMappingInput]:
 
 
 def judge_model(langfuse) -> EvaluatorModelConfig | None:
-    """The project's OpenAI connection with JUDGE_MODEL, or None for the project's default evaluation model."""
+    """A connection in the project that can serve JUDGE_MODEL, or None for the project's default.
+
+    An evaluator names both a connection and a model, and the two have to agree: a connection to
+    Anthropic cannot serve a GPT model, or the other way round. The vendor is read from JUDGE_MODEL
+    rather than hardcoded, because Robin moved to Claude while this still looked for OpenAI - which
+    would have produced an evaluator asking an OpenAI connection for a Claude model.
+    """
+    wanted = "anthropic" if JUDGE_MODEL.startswith("claude") else "openai"
     try:
         connections = langfuse.api.llm_connections.list(limit=50).data
     except Exception as error:
         print(f"Couldn't read the LLM connections ({error}); using the project's default evaluation model.")
         return None
     for connection in connections:
-        if "openai" in str(getattr(connection, "provider", "")).lower() or \
-           "openai" in str(getattr(connection, "adapter", "")).lower():
+        haystack = f"{getattr(connection, 'provider', '')} {getattr(connection, 'adapter', '')}".lower()
+        if wanted in haystack:
             return EvaluatorModelConfig(provider=connection.provider, model=JUDGE_MODEL)
-    print("No OpenAI LLM connection found; using the project's default evaluation model.")
+    names = ", ".join(str(getattr(c, "provider", "?")) for c in connections) or "none at all"
+    print(f"No {wanted} LLM connection in this project (found: {names}), so the judges would have "
+          f"nothing to run {JUDGE_MODEL} on. Add one in Langfuse under Settings > LLM Connections, "
+          f"or set JUDGE_MODEL to a model an existing connection can serve. Falling back to the "
+          f"project's default evaluation model.")
     return None
 
 
