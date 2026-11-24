@@ -40,5 +40,5 @@ She opens it herself; only open the browser pane if she asks to see it.
 
 ## Notes
 
-- The page is `public/index.html`, built from `instructor/widget/`. After changing the widget, run `npm install` and `npm run build` inside `widget/`, then refresh the browser — no restart needed. Changes to Python files (`app.py`, `robin.py`, `prompts.py`, …) do need a restart: waitress has no auto-reload.
+- The page is `public/index.html`, built from `instructor/widget/`. After changing the widget, run `npm install` and `npm run build` inside `instructor/widget/`, then refresh the browser — no restart needed. Changes to Python files (`app.py`, `robin.py`, `prompts.py`, …) do need a restart: waitress has no auto-reload.
 - Prompts come from Langfuse (label `production`); on the first run Robin creates any missing prompts from `prompts.py`.

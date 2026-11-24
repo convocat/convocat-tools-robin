@@ -168,6 +168,7 @@ Guardrails always use the `production` label. Only the system prompt follows a s
 | `render.yaml` | Instructions for Render, the hosting service |
 | `.github/workflows/` | Three button-press jobs on GitHub (see section 4) |
 | `instructor/tests/` | Automatic checks with a fake model (free to run) |
+| `check_install.py` | The end-to-end install check a participant runs. Prints no key values. |
 | `.claude/skills/` | This repo's own Claude Code skills: `robin-start`, `robin-dashboard`, `robin-backlog`, `robin-usecase-discovery`, `robin-conversation-design-review`, `robin-test-case-generator`, `robin-trace-to-persona` |
 | `BACKLOG.md` / `HANDOVER.md` | Open work, and a snapshot of where things stand |
 | `.gitignore` | List of files Git must never upload (such as `.env` and `dashboard-data.json`) |
@@ -226,6 +227,8 @@ Type these in a terminal opened in the repo folder, or simply ask Claude Code to
 
 | Command | What it does |
 |---|---|
+| `/robin-install` (in Claude Code) | Installs Robin from scratch, for a course participant: packages, their own Langfuse, keys, the end-to-end check, and the Render deploy |
+| `python check_install.py` | Checks an install end to end, including one real message whose trace is read back from Langfuse (`--no-chat` skips it) |
 | `/robin-start` (in Claude Code) | Starts Robin locally; open http://127.0.0.1:3000 |
 | `/robin-dashboard` (in Claude Code) | Refreshes and opens the PO/CxD dashboard |
 | `python app.py` | Starts Robin locally by hand |

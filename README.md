@@ -39,11 +39,44 @@ Good to know:
 - **Updating:** Render doesn't pick up changes on GitHub automatically. Click **Manual Deploy > Deploy latest commit**.
 - Robin runs in Render's EU region (Frankfurt).
 
-## For students who want their own Robin
+## For course participants: installing your own Robin
 
-**To run your own Robin on Render, you don't need a copy of the code.** Click **Deploy to Render** at the top of this page, sign in, and fill in your own keys and passcode. Render builds Robin straight from this public repository. Robin's prompts live in your own Langfuse project, so you can still change them.
+**The short version: clone this repository, open the folder in Claude Code, and type
+`/robin-install`.** The skill walks the whole thing — Python, the packages, your own Langfuse
+project, your keys, a check that the whole chain really works, and the deploy to Render — and
+checks each step instead of assuming it. It never asks you to paste a key into the chat: keys go
+into your `.env` file, which is never uploaded anywhere.
 
-**To change the code as well**, make your own copy first:
+What you need before you start, and it is worth reading this list once:
+
+| What | For | Note |
+|---|---|---|
+| Claude Code (Pro or Max) | running the install | |
+| A free Langfuse account | your traces | Yours to keep after the course |
+| An Anthropic API key | Robin's answers and guardrails | **Pro/Max is not an API key** — the API is billed separately, so put a little credit on it and set a spending limit |
+| An OpenAI API key | embeddings for the look-up only | Claude has no embeddings model; this costs cents |
+| A free Render account | putting Robin online | Optional: Robin runs locally too |
+
+You need **no database**: the look-up searches `data/chunks.json`, which is committed, so a fresh
+clone can search straight away.
+
+**To check an install, now or later:**
+
+```bash
+.venv/Scripts/python.exe check_install.py
+```
+
+It verifies each service answers, then sends one real message and reads the trace back out of
+Langfuse — confirming the guardrail steps are in it and your prompts were created. That is the
+check that matters: an answer on screen only proves the model replied. Add `--no-chat` to skip the
+message and its cost.
+
+**If you'd rather not copy the code at all**, click **Deploy to Render** at the top of this page
+and fill in your own keys. Render builds Robin straight from this public repository, and Robin's
+prompts still live in your own Langfuse project, so you can change them. You just can't change the
+code.
+
+**To change the code too**, make your own copy first:
 
 1. On GitHub, click **Fork** at the top of this repository.
 2. In **your** copy's README, change `convocat/convocat-tools-robin` in the button link to your GitHub name and repository.
@@ -268,5 +301,6 @@ New to the code? [`REPO_GUIDE.md`](REPO_GUIDE.md) is a fuller map of the repo, w
 | `render.yaml` | Tells Render how to run Robin |
 | `requirements.txt` | Python packages |
 | `.env.example` | Template for your keys when running locally |
+| `check_install.py` | Checks an install end to end: the services, the corpus, and one real message whose trace is read back out of Langfuse |
 | `instructor/` | Everything a student never needs: the widget source, the experiment set and runner, the judge prompts and the offline tests. Kept out of the way on purpose |
 | `instructor/tests/bank_account_cases.csv` | The bank account test set: 17 messages that must be masked, must stay, or are known gaps. Paste them into Robin, or run them with `python -m pytest instructor/tests/test_bank_accounts.py` |
