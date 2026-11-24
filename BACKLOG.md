@@ -28,6 +28,24 @@ Things that look like bugs and are course material. Leave them in.
 
 ## Open
 
+- **Add an Anthropic LLM connection in Langfuse, for the judges.** The evaluators now default to
+  `claude-haiku-5-5` (`JUDGE_MODEL`), but an LLM-as-a-judge evaluator runs on a connection
+  configured in the Langfuse UI under Settings > LLM Connections. Until an Anthropic connection
+  exists there, the judges will fail. This is deliberately a by-hand step: nothing in this repo
+  creates Langfuse connections.
+- **Put `ANTHROPIC_API_KEY` where Robin runs.** Needed in `.env` locally, in Render's environment,
+  and as a GitHub Actions secret for the experiment workflow. Robin still starts without it and
+  fails on the first message, so the symptom is a broken chat rather than a boot failure.
+- **Reword two look-up prompts in Langfuse: "handbook" -> "the documents".**
+  `robin/system-prompt-lookup` and `robin/facts-check-lookup` both tell Robin it is working from
+  "handbook sections". Since 2026-11-24 the corpus is three documents (handbook, product guide,
+  FAQ) and each chunk carries the document it came from, so the wording is narrower than the truth
+  and will read oddly to a student who notices. Robin works either way: this is wording, not
+  behaviour. Maaike said she would do it and asked for it on the board so it doesn't get forgotten.
+  In the Langfuse UI: save a new version of each prompt and move the `production` label. Nothing in
+  this repo may edit prompt text, so it cannot be done from here.
+  While you are there, `robin/query-rewrite` says "a search query for the Nest & Co customer
+  handbook" too (`prompts.py` holds the starting version of the same text).
 - **Give Robin a real escalation path.** When a customer insists on a human (seen for real in the
   traces — "I need to talk with a human agent" x3), Robin has no contact info to offer: the
   default system prompt only injects `RETURN_POLICY`, not Customer Care's hours/channel.
