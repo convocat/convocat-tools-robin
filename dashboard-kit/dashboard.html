@@ -199,6 +199,26 @@
   .topic-table .bar-fill { position: absolute; top: 4px; left: 0; bottom: 4px; border-radius: 4px; opacity: 0.35; }
   .topic-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
+  /* Language toggle (NL / EN) in the header */
+  .lang-toggle { margin-left: auto; display: inline-flex; border: 1px solid rgba(255,255,255,0.4); border-radius: var(--radius); overflow: hidden; }
+  .lang-toggle button { border: 0; background: transparent; color: white; padding: 6px 12px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; opacity: 0.75; }
+  .lang-toggle button + button { border-left: 1px solid rgba(255,255,255,0.4); }
+  .lang-toggle button.active { background: white; color: #1e3a5f; opacity: 1; }
+  .lang-toggle button:focus-visible { outline: 2px solid white; outline-offset: -3px; }
+
+  /* RAG & Guardrails tab */
+  .rag-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--card); }
+  .seg button { border: 0; background: transparent; padding: 7px 14px; font-size: 0.8125rem; font-weight: 500; color: var(--text-light); cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button.active { background: var(--text); color: var(--card); }
+  .rag-controls select { padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8125rem; background: var(--card); max-width: 520px; }
+  .rag-note { font-size: 0.75rem; color: var(--text-light); }
+  .rag-h3 { margin: 20px 0 12px; font-size: 0.9375rem; font-weight: 600; }
+  .topic-table td.query { max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topic-table a { color: var(--primary); text-decoration: none; }
+  .topic-table a:hover { text-decoration: underline; }
+
   /* Responsive */
   @media (max-width: 768px) {
     .content { padding: 16px; }
@@ -215,71 +235,76 @@
   <div class="logo">M</div>
   <div>
     <h1>Robin — Nest &amp; Co Chatbot Analytics</h1>
-    <div class="subtitle">Interactief dashboard voor chatbotprestaties</div>
+    <div class="subtitle" data-i18n="header.subtitle">Interactief dashboard voor chatbotprestaties</div>
+  </div>
+  <div class="lang-toggle" role="group" aria-label="Language / Taal">
+    <button type="button" data-lang="nl" class="active">NL</button>
+    <button type="button" data-lang="en">EN</button>
   </div>
 </div>
 
 <div class="tab-bar">
-  <div class="tab active" data-tab="po">Product Owner</div>
-  <div class="tab" data-tab="cm">Contentmanager</div>
-  <div class="tab" data-tab="tech">Technisch Beheer</div>
-  <div class="tab" data-tab="log">Gesprekslogboek</div>
+  <div class="tab active" data-tab="po" data-i18n="tab.po">Product Owner</div>
+  <div class="tab" data-tab="cm" data-i18n="tab.cm">Contentmanager</div>
+  <div class="tab" data-tab="tech" data-i18n="tab.tech">Technisch Beheer</div>
+  <div class="tab" data-tab="rag" data-i18n="tab.rag">RAG &amp; Guardrails</div>
+  <div class="tab" data-tab="log" data-i18n="tab.log">Gesprekslogboek</div>
 </div>
 
 <div class="date-filter-bar">
-  <span class="filter-label">Periode:</span>
-  <button class="preset-btn active" data-preset="all">Alles</button>
-  <button class="preset-btn" data-preset="yesterday">Gisteren</button>
-  <button class="preset-btn" data-preset="wtd">Week tot nu toe</button>
-  <button class="preset-btn" data-preset="lastweek">Laatste volledige week</button>
-  <button class="preset-btn" data-preset="month">Deze maand</button>
-  <button class="preset-btn" data-preset="custom">Custom</button>
+  <span class="filter-label" data-i18n="filter.period">Periode:</span>
+  <button class="preset-btn active" data-preset="all" data-i18n="filter.all">Alles</button>
+  <button class="preset-btn" data-preset="yesterday" data-i18n="filter.yesterday">Gisteren</button>
+  <button class="preset-btn" data-preset="wtd" data-i18n="filter.wtd">Week tot nu toe</button>
+  <button class="preset-btn" data-preset="lastweek" data-i18n="filter.lastweek">Laatste volledige week</button>
+  <button class="preset-btn" data-preset="month" data-i18n="filter.month">Deze maand</button>
+  <button class="preset-btn" data-preset="custom" data-i18n="filter.custom">Custom</button>
   <input type="date" id="global-date-from" style="display:none">
-  <span class="date-sep" id="date-sep" style="display:none">t/m</span>
+  <span class="date-sep" id="date-sep" style="display:none" data-i18n="filter.until">t/m</span>
   <input type="date" id="global-date-to" style="display:none">
-  <label style="margin-left:12px;font-size:0.82rem;color:var(--text-light);display:flex;align-items:center;gap:4px"><input type="checkbox" id="exclude-testers"> Testgesprekken verbergen</label>
+  <label style="margin-left:12px;font-size:0.82rem;color:var(--text-light);display:flex;align-items:center;gap:4px"><input type="checkbox" id="exclude-testers"> <span data-i18n="filter.hideTesters">Testgesprekken verbergen</span></label>
   <span class="active-range" id="active-range-label"></span>
 </div>
 
 <div class="content">
   <div id="loading" class="loading">
     <div class="spinner"></div>
-    <p>Data laden...</p>
+    <p data-i18n="loading">Data laden...</p>
   </div>
 
   <!-- ========== PRODUCT OWNER ========== -->
   <div id="tab-po" class="tab-content">
     <nav class="section-nav" id="po-nav">
-      <div class="nav-title">Product Owner</div>
-      <a href="#po-overzicht" class="active">Overzicht</a>
-      <a href="#po-bereikbaarheid">Bereikbaarheid</a>
-      <a href="#po-effectiviteit">Effectiviteit</a>
-      <a href="#po-trends">Trends</a>
-      <a href="#po-onderwerpen">Onderwerpen</a>
-      <a href="#po-tevredenheid">Tevredenheid</a>
+      <div class="nav-title" data-i18n="tab.po">Product Owner</div>
+      <a href="#po-overzicht" class="active" data-i18n="nav.overview">Overzicht</a>
+      <a href="#po-bereikbaarheid" data-i18n="po.nav.reach">Bereikbaarheid</a>
+      <a href="#po-effectiviteit" data-i18n="po.nav.effect">Effectiviteit</a>
+      <a href="#po-trends" data-i18n="po.nav.trends">Trends</a>
+      <a href="#po-onderwerpen" data-i18n="po.nav.topics">Onderwerpen</a>
+      <a href="#po-tevredenheid" data-i18n="po.nav.satisfaction">Tevredenheid</a>
     </nav>
     <div class="tab-main">
       <div class="info-box">
-        <h4>Dashboard voor de Product Owner</h4>
-        <p>Focus: adoptie, waarde voor de organisatie en bereik van Robin. Doel: inzicht in gesprekskwaliteit voor de Maven-cursus.</p>
+        <h4 data-i18n="po.info.title">Dashboard voor de Product Owner</h4>
+        <p data-i18n="po.info.text">Focus: adoptie, waarde voor de organisatie en bereik van Robin. Doel: inzicht in gesprekskwaliteit voor de Maven-cursus.</p>
       </div>
 
       <div id="po-overzicht" class="po-section">
-        <h2><span class="section-icon">&#128202;</span> Overzicht</h2>
+        <h2><span class="section-icon">&#128202;</span> <span data-i18n="nav.overview">Overzicht</span></h2>
         <div class="kpi-row" id="po-kpis"></div>
       </div>
 
       <div id="po-bereikbaarheid" class="po-section">
-        <h2><span class="section-icon">&#128336;</span> Bereikbaarheid</h2>
+        <h2><span class="section-icon">&#128336;</span> <span data-i18n="po.nav.reach">Bereikbaarheid</span></h2>
         <div class="kpi-row" id="po-bereik-kpis"></div>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Gesprekken per dagdeel (CET)</h3><canvas id="chart-hourly"></canvas></div>
-          <div class="chart-card"><h3>Gesprekken per weekdag</h3><canvas id="chart-dow"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="po.chart.hourly">Gesprekken per dagdeel (CET)</h3><canvas id="chart-hourly"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="po.chart.dow">Gesprekken per weekdag</h3><canvas id="chart-dow"></canvas></div>
         </div>
       </div>
 
       <div id="po-effectiviteit" class="po-section">
-        <h2><span class="section-icon">&#9989;</span> Effectiviteit</h2>
+        <h2><span class="section-icon">&#9989;</span> <span data-i18n="po.nav.effect">Effectiviteit</span></h2>
         <div class="info-box" style="margin-bottom:16px">
           <p id="effectiveness-info"></p>
         </div>
@@ -287,24 +312,24 @@
       </div>
 
       <div id="po-trends" class="po-section">
-        <h2><span class="section-icon">&#128200;</span> Trends</h2>
+        <h2><span class="section-icon">&#128200;</span> <span data-i18n="po.nav.trends">Trends</span></h2>
         <div class="chart-grid">
-          <div class="chart-card full"><h3>Gesprekken per maand</h3><canvas id="chart-monthly"></canvas></div>
+          <div class="chart-card full"><h3 data-i18n="po.chart.monthly">Gesprekken per maand</h3><canvas id="chart-monthly"></canvas></div>
         </div>
       </div>
 
       <div id="po-onderwerpen" class="po-section">
-        <h2><span class="section-icon">&#128218;</span> Onderwerpen</h2>
+        <h2><span class="section-icon">&#128218;</span> <span data-i18n="po.nav.topics">Onderwerpen</span></h2>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Top onderwerpen</h3><canvas id="chart-topics"></canvas></div>
-          <div class="chart-card"><h3>Single-turn vs. multi-turn</h3><canvas id="chart-turns"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="po.chart.topics">Top onderwerpen</h3><canvas id="chart-topics"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="po.chart.turns">Single-turn vs. multi-turn</h3><canvas id="chart-turns"></canvas></div>
         </div>
-        <h3 style="margin:20px 0 12px;font-size:1rem;">Prestaties per onderwerp</h3>
+        <h3 style="margin:20px 0 12px;font-size:1rem;" data-i18n="po.topicPerf">Prestaties per onderwerp</h3>
         <div id="po-topic-table"></div>
       </div>
 
       <div id="po-tevredenheid" class="po-section">
-        <h2><span class="section-icon">&#11088;</span> Tevredenheid</h2>
+        <h2><span class="section-icon">&#11088;</span> <span data-i18n="po.nav.satisfaction">Tevredenheid</span></h2>
         <div class="info-box" id="bsat-info">
           <h4>BSAT — Bot Satisfaction Score</h4>
           <p id="bsat-info-text"></p>
@@ -317,48 +342,48 @@
   <!-- ========== CONTENTMANAGER ========== -->
   <div id="tab-cm" class="tab-content">
     <nav class="section-nav">
-      <div class="nav-title">Contentmanager</div>
-      <a href="#cm-kpi-section" class="active">Overzicht</a>
-      <a href="#cm-gesprekken">Gespreksduur</a>
-      <a href="#cm-content-gaps">Content gaps</a>
-      <a href="#cm-feedback">Feedback</a>
-      <a href="#cm-fouten">Fouten</a>
+      <div class="nav-title" data-i18n="tab.cm">Contentmanager</div>
+      <a href="#cm-kpi-section" class="active" data-i18n="nav.overview">Overzicht</a>
+      <a href="#cm-gesprekken" data-i18n="cm.nav.length">Gespreksduur</a>
+      <a href="#cm-content-gaps" data-i18n="cm.nav.gaps">Content gaps</a>
+      <a href="#cm-feedback" data-i18n="cm.nav.feedback">Feedback</a>
+      <a href="#cm-fouten" data-i18n="cm.nav.errors">Fouten</a>
     </nav>
     <div class="tab-main">
       <div class="info-box">
-        <h4>Dashboard voor de Contentmanager / Conversation Designer</h4>
-        <p>Focus: kwaliteit van antwoorden, content gaps, en verbeterpunten voor de kennisbank.</p>
+        <h4 data-i18n="cm.info.title">Dashboard voor de Contentmanager / Conversation Designer</h4>
+        <p data-i18n="cm.info.text">Focus: kwaliteit van antwoorden, content gaps, en verbeterpunten voor de kennisbank.</p>
       </div>
       <div id="cm-kpi-section" class="po-section">
         <div class="kpi-row" id="cm-kpis"></div>
       </div>
       <div id="cm-gesprekken" class="po-section">
-        <h2>Gespreksduur</h2>
+        <h2 data-i18n="cm.length">Gespreksduur</h2>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Gespreksduur (aantal vragen per sessie)</h3><canvas id="chart-convlength"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="cm.chart.length">Gespreksduur (aantal vragen per sessie)</h3><canvas id="chart-convlength"></canvas></div>
         </div>
       </div>
       <div id="cm-content-gaps" class="po-section">
-        <h2>Content gaps & onderwerpen</h2>
+        <h2 data-i18n="cm.gaps">Content gaps & onderwerpen</h2>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Onderwerpen met meeste "Overig" (mogelijke content gaps)</h3><canvas id="chart-topics-cm"></canvas></div>
-          <div class="chart-card full"><h3>Onderwerpen over tijd</h3><canvas id="chart-topics-trend"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="cm.chart.other">Onderwerpen met meeste "Overig" (mogelijke content gaps)</h3><canvas id="chart-topics-cm"></canvas></div>
+          <div class="chart-card full"><h3 data-i18n="cm.chart.trend">Onderwerpen over tijd</h3><canvas id="chart-topics-trend"></canvas></div>
         </div>
       </div>
       <div id="cm-feedback" class="po-section">
-        <h3 class="section-title">Gebruikersfeedback (<span id="fb-count"></span> berichten)</h3>
+        <h3 class="section-title" data-i18n-html="cm.feedbackTitle">Gebruikersfeedback (<span id="fb-count"></span> berichten)</h3>
         <div class="feedback-scroll">
           <table class="feedback-table" id="feedback-table">
-            <thead><tr><th>Datum</th><th>Feedback</th><th>Bekijk</th></tr></thead>
+            <thead><tr><th data-i18n="common.date">Datum</th><th data-i18n="common.feedback">Feedback</th><th data-i18n="common.view">Bekijk</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
       <div id="cm-fouten" class="po-section">
-        <h3 class="section-title" style="margin-top:32px">Gesprekken met foutieve antwoorden (lege responses)</h3>
+        <h3 class="section-title" style="margin-top:32px" data-i18n="cm.errorsTitle">Gesprekken met foutieve antwoorden (lege responses)</h3>
         <div class="feedback-scroll">
           <table class="log-table" id="error-table">
-            <thead><tr><th>Datum</th><th>Onderwerp</th><th>Eerste vraag</th></tr></thead>
+            <thead><tr><th data-i18n="common.date">Datum</th><th data-i18n="common.topic">Onderwerp</th><th data-i18n="common.firstQuestion">Eerste vraag</th></tr></thead>
             <tbody id="error-tbody"></tbody>
           </table>
         </div>
@@ -369,38 +394,108 @@
   <!-- ========== TECHNISCH BEHEER ========== -->
   <div id="tab-tech" class="tab-content">
     <nav class="section-nav">
-      <div class="nav-title">Technisch Beheer</div>
-      <a href="#tech-kpi-section" class="active">Overzicht</a>
-      <a href="#tech-belasting">Belasting</a>
-      <a href="#tech-fouten">Fouten</a>
-      <a href="#tech-responses">Responses</a>
+      <div class="nav-title" data-i18n="tab.tech">Technisch Beheer</div>
+      <a href="#tech-kpi-section" class="active" data-i18n="nav.overview">Overzicht</a>
+      <a href="#tech-belasting" data-i18n="tech.nav.load">Belasting</a>
+      <a href="#tech-fouten" data-i18n="tech.nav.errors">Fouten</a>
+      <a href="#tech-responses" data-i18n="tech.nav.responses">Responses</a>
     </nav>
     <div class="tab-main">
       <div class="info-box">
-        <h4>Dashboard voor Technisch Beheer</h4>
-        <p>Focus: stabiliteit, fouten, belasting en systeemprestaties.</p>
+        <h4 data-i18n="tech.info.title">Dashboard voor Technisch Beheer</h4>
+        <p data-i18n="tech.info.text">Focus: stabiliteit, fouten, belasting en systeemprestaties.</p>
       </div>
       <div id="tech-kpi-section" class="po-section">
         <div class="kpi-row" id="tech-kpis"></div>
       </div>
       <div id="tech-belasting" class="po-section">
-        <h2>Belasting</h2>
+        <h2 data-i18n="tech.load">Belasting</h2>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Belasting per uur (CET)</h3><canvas id="chart-hourly-tech"></canvas></div>
-          <div class="chart-card"><h3>Gesprekken per maand (trend)</h3><canvas id="chart-monthly-tech"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="tech.chart.hourly">Belasting per uur (CET)</h3><canvas id="chart-hourly-tech"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="tech.chart.monthly">Gesprekken per maand (trend)</h3><canvas id="chart-monthly-tech"></canvas></div>
         </div>
       </div>
       <div id="tech-fouten" class="po-section">
-        <h2>Fouten</h2>
+        <h2 data-i18n="tech.errors">Fouten</h2>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Fouten per maand</h3><canvas id="chart-errors-monthly"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="tech.chart.errors">Fouten per maand</h3><canvas id="chart-errors-monthly"></canvas></div>
         </div>
       </div>
       <div id="tech-responses" class="po-section">
-        <h2>Responses</h2>
+        <h2 data-i18n="tech.responses">Responses</h2>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Antwoordlengte verdeling</h3><canvas id="chart-response-length"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="tech.chart.length">Antwoordlengte verdeling</h3><canvas id="chart-response-length"></canvas></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== RAG & GUARDRAILS ========== -->
+  <div id="tab-rag" class="tab-content">
+    <nav class="section-nav">
+      <div class="nav-title" data-i18n="tab.rag">RAG &amp; Guardrails</div>
+      <a href="#rag-overzicht" class="active" data-i18n="nav.overview">Overzicht</a>
+      <a href="#rag-guardrails" data-i18n="rag.nav.guardrails">Guardrails</a>
+      <a href="#rag-lookup" data-i18n="rag.nav.lookup">Look-up (RAG)</a>
+      <a href="#rag-kwaliteit" data-i18n="rag.nav.evals">Kwaliteitschecks</a>
+      <a href="#rag-runs" data-i18n="rag.nav.runs">Experimentruns</a>
+    </nav>
+    <div class="tab-main">
+      <div class="info-box">
+        <h4 data-i18n="tab.rag">RAG &amp; Guardrails</h4>
+        <p data-i18n="rag.info.text">Wat de guardrails per chatbeurt deden, hoe goed de look-up passende handboeksecties vond, en hoe vaak de kwaliteitschecks (evaluators) slaagden. Eén chatbeurt = één klantbericht met het antwoord van Robin. Cursusgesprekken en experimenten worden nooit bij elkaar opgeteld.</p>
+      </div>
+      <div class="rag-controls">
+        <div class="seg" id="rag-source">
+          <button data-source="course" class="active" data-i18n="rag.src.course">Cursusgesprekken</button>
+          <button data-source="experiment" data-i18n="rag.src.experiment">Experimenten</button>
+        </div>
+        <select id="rag-run" style="display:none"></select>
+        <span class="rag-note" id="rag-generated"></span>
+      </div>
+      <div id="rag-empty" class="info-box" style="display:none"></div>
+
+      <div id="rag-overzicht" class="po-section">
+        <h2 data-i18n="nav.overview">Overzicht</h2>
+        <div class="kpi-row" id="rag-kpis"></div>
+        <div class="chart-grid">
+          <div class="chart-card full"><h3 data-i18n="rag.chart.outcomes">Afloop van chatbeurten per dag</h3><canvas id="chart-rag-outcomes"></canvas></div>
+        </div>
+      </div>
+
+      <div id="rag-guardrails" class="po-section">
+        <h2 data-i18n="rag.nav.guardrails">Guardrails</h2>
+        <div class="chart-grid">
+          <div class="chart-card full"><h3 data-i18n="rag.chart.guardrails">Wat elke guardrail deed (% van alle chatbeurten)</h3><canvas id="chart-rag-guardrails"></canvas></div>
+        </div>
+        <div id="rag-guardrail-table"></div>
+        <p class="rag-note" style="margin-top:8px" data-i18n="rag.guardrailNote">Ingreep-% telt alleen chatbeurten waarin de guardrail aan stond. De facts check controleert pas als de prompt-injection check het bericht heeft doorgelaten; tegengehouden berichten tellen daar niet mee.</p>
+      </div>
+
+      <div id="rag-lookup" class="po-section">
+        <h2 data-i18n="rag.nav.lookup">Look-up (RAG)</h2>
+        <div class="kpi-row" id="rag-lookup-kpis"></div>
+        <div id="rag-lookup-thin" class="info-box" style="display:none"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><h3 data-i18n="rag.chart.similarity">Beste match per chatbeurt (similarity)</h3><canvas id="chart-rag-similarity"></canvas></div>
+          <div class="chart-card"><h3 data-i18n="rag.chart.sections">Vaakst gevonden als beste match</h3><canvas id="chart-rag-sections"></canvas></div>
+        </div>
+        <h3 class="rag-h3" data-i18n="rag.compareTitle">Helpt de look-up? Met en zonder look-up vergeleken</h3>
+        <div id="rag-compare-table"></div>
+        <h3 class="rag-h3" data-i18n="rag.weakTitle">Zwakste matches</h3>
+        <div id="rag-weak-table"></div>
+      </div>
+
+      <div id="rag-kwaliteit" class="po-section">
+        <h2 data-i18n="rag.nav.evals">Kwaliteitschecks</h2>
+        <div class="chart-grid">
+          <div class="chart-card full"><h3 data-i18n="rag.chart.evals">Geslaagd per check (% van de chatbeurten waarop de check draaide)</h3><canvas id="chart-rag-evals"></canvas></div>
+        </div>
+      </div>
+
+      <div id="rag-runs" class="po-section">
+        <h2 data-i18n="rag.nav.runs">Experimentruns</h2>
+        <div id="rag-runs-table"></div>
       </div>
     </div>
   </div>
@@ -408,36 +503,36 @@
   <!-- ========== GESPREKSLOGBOEK ========== -->
   <div id="tab-log" class="tab-content no-sidebar">
     <div class="info-box">
-      <h4>Volledig gesprekslogboek</h4>
-      <p>Doorzoek en filter alle <span id="total-convos-log"></span> gesprekken. Klik op een gesprek om het volledige verloop te bekijken.</p>
+      <h4 data-i18n="log.info.title">Volledig gesprekslogboek</h4>
+      <p data-i18n-html="log.info.text">Doorzoek en filter alle <span id="total-convos-log"></span> gesprekken. Klik op een gesprek om het volledige verloop te bekijken.</p>
     </div>
     <div class="log-controls">
-      <input type="text" id="log-search" placeholder="Zoek in gesprekken...">
+      <input type="text" id="log-search" placeholder="Zoek in gesprekken..." data-i18n-placeholder="log.search">
       <select id="log-topic"><option value="">Alle onderwerpen</option></select>
-      <label><input type="checkbox" id="log-errors-only"> Alleen fouten</label>
-      <label><input type="checkbox" id="log-feedback-only"> Alleen met feedback</label>
+      <label><input type="checkbox" id="log-errors-only"> <span data-i18n="log.errorsOnly">Alleen fouten</span></label>
+      <label><input type="checkbox" id="log-feedback-only"> <span data-i18n="log.feedbackOnly">Alleen met feedback</span></label>
       <span class="log-count" id="log-count"></span>
     </div>
     <div class="selection-bar" id="selection-bar">
-      <strong><span id="sel-count">0</span> geselecteerd</strong>
+      <strong data-i18n-html="log.selected"><span id="sel-count">0</span> geselecteerd</strong>
       <span class="sel-stat" id="sel-topics"></span>
       <span class="sel-stat" id="sel-turns"></span>
       <span class="sel-stat" id="sel-errors"></span>
-      <button onclick="exportSelection()">Exporteer selectie (CSV)</button>
-      <button onclick="clearSelection()">Wis selectie</button>
+      <button onclick="exportSelection()" data-i18n="log.export">Exporteer selectie (CSV)</button>
+      <button onclick="clearSelection()" data-i18n="log.clear">Wis selectie</button>
     </div>
     <div class="log-table-wrap">
       <table class="log-table" id="conv-table">
         <thead>
           <tr>
-            <th class="td-check"><input type="checkbox" id="select-all" title="Selecteer alles op pagina"></th>
+            <th class="td-check"><input type="checkbox" id="select-all" title="Selecteer alles op pagina" data-i18n-title="log.selectAll"></th>
             <th class="td-status"></th>
-            <th>Datum</th>
-            <th>Onderwerp</th>
-            <th>Vragen</th>
-            <th>Eerste vraag</th>
-            <th>Fout</th>
-            <th>Feedback</th>
+            <th data-i18n="common.date">Datum</th>
+            <th data-i18n="common.topic">Onderwerp</th>
+            <th data-i18n="common.questions">Vragen</th>
+            <th data-i18n="common.firstQuestion">Eerste vraag</th>
+            <th data-i18n="common.error">Fout</th>
+            <th data-i18n="common.feedback">Feedback</th>
           </tr>
         </thead>
         <tbody id="conv-tbody"></tbody>
@@ -457,12 +552,246 @@ const charts = {}; // store chart instances for destroy/rebuild
 let globalDateFrom = null;
 let globalDateTo = null;
 
+// ========== LANGUAGE (NL / EN) ==========
+// Every visible text comes from this list. Static HTML points at a key with data-i18n (text),
+// data-i18n-html (text with markup), data-i18n-placeholder or data-i18n-title; scripts call t('key').
+// {name} in a text is filled in from the second argument of t().
+const I18N = {
+  nl: {
+    'header.subtitle': 'Interactief dashboard voor chatbotprestaties',
+    'tab.po': 'Product Owner', 'tab.cm': 'Contentmanager', 'tab.tech': 'Technisch Beheer', 'tab.rag': 'RAG & Guardrails', 'tab.log': 'Gesprekslogboek',
+    'filter.period': 'Periode:', 'filter.all': 'Alles', 'filter.yesterday': 'Gisteren', 'filter.wtd': 'Week tot nu toe',
+    'filter.lastweek': 'Laatste volledige week', 'filter.month': 'Deze maand', 'filter.custom': 'Custom', 'filter.until': 't/m',
+    'filter.hideTesters': 'Testgesprekken verbergen', 'filter.range': '{from} t/m {to} ({n} gesprekken)',
+    'loading': 'Data laden...', 'loadError': 'Fout bij laden data: {msg}<br>Zorg dat dashboard-data.json in dezelfde map staat.',
+    'nav.overview': 'Overzicht',
+    'common.conversations': 'Gesprekken', 'common.nConversations': '{n} gesprekken', 'common.aOfB': '{a} van {b}',
+    'common.aOfBConversations': '{a} van {b} gesprekken', 'common.date': 'Datum', 'common.topic': 'Onderwerp',
+    'common.firstQuestion': 'Eerste vraag', 'common.questions': 'Vragen', 'common.error': 'Fout', 'common.errors': 'Fouten',
+    'common.feedback': 'Feedback', 'common.view': 'Bekijk', 'common.question': 'vraag', 'common.questionsLower': 'vragen',
+    'common.yes': 'Ja', 'common.no': 'Nee',
+    'days': ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'],
+    'months': ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'],
+    // Product Owner
+    'po.nav.reach': 'Bereikbaarheid', 'po.nav.effect': 'Effectiviteit', 'po.nav.trends': 'Trends', 'po.nav.topics': 'Onderwerpen', 'po.nav.satisfaction': 'Tevredenheid',
+    'po.info.title': 'Dashboard voor de Product Owner',
+    'po.info.text': 'Focus: adoptie, waarde voor de organisatie en bereik van Robin. Doel: inzicht in gesprekskwaliteit voor de Maven-cursus.',
+    'po.chart.hourly': 'Gesprekken per dagdeel (CET)', 'po.chart.dow': 'Gesprekken per weekdag', 'po.chart.monthly': 'Gesprekken per maand',
+    'po.chart.topics': 'Top onderwerpen', 'po.chart.turns': 'Single-turn vs. multi-turn', 'po.topicPerf': 'Prestaties per onderwerp',
+    'po.kpi.total': 'Totaal gesprekken', 'po.kpi.noData': 'Geen data in deze periode', 'po.kpi.perMonth': 'Gemiddeld per maand',
+    'po.kpi.monthsActive': '{n} maanden actief', 'po.kpi.questions': 'Totaal vragen', 'po.kpi.questionsAvg': '{n} vragen/gesprek gemiddeld',
+    'po.kpi.ratings': 'Beoordelingen', 'po.kpi.pctOfAll': '{p}% van alle gesprekken',
+    'po.effect.info': '<strong>Containment rate</strong>: % gesprekken waarin de gebruiker niet expliciet om een medewerker of ander kanaal vraagt. ' +
+      '<strong>First-time resolution</strong>: % gesprekken afgerond zonder herformulering (minder dan 3 vragen). ' +
+      '<strong>Task completion</strong>: % gesprekken met expliciete positieve beoordeling (👍) door de gebruiker. Alleen de gebruiker kan beoordelen of de taak volbracht is.',
+    'po.effect.contained': '{a} van {b} ({e} escalaties)',
+    'po.reach.outside': 'Buiten kantoortijden', 'po.reach.weekend': 'In het weekend',
+    'po.bsat.response': 'Feedbackrespons',
+    'po.bsat.info': 'BSAT = (👍 positieve beoordelingen ÷ totaal beoordelingen) × 100. Gebaseerd op duimpjes (thumbs up/down) uit Flowise. ' +
+      'Respons: {rated} van {total} gesprekken ({rate}%). Daarvan hebben {text} ook tekst-feedback achtergelaten. Scores met en zonder {testers} interne testgesprekken.',
+    'po.turns.single': 'Single-turn (1 vraag)', 'po.turns.multi': 'Multi-turn (2+ vragen)',
+    // Contentmanager
+    'cm.nav.length': 'Gespreksduur', 'cm.nav.gaps': 'Content gaps', 'cm.nav.feedback': 'Feedback', 'cm.nav.errors': 'Fouten',
+    'cm.info.title': 'Dashboard voor de Contentmanager / Conversation Designer',
+    'cm.info.text': 'Focus: kwaliteit van antwoorden, content gaps, en verbeterpunten voor de kennisbank.',
+    'cm.length': 'Gespreksduur', 'cm.chart.length': 'Gespreksduur (aantal vragen per sessie)', 'cm.gaps': 'Content gaps & onderwerpen',
+    'cm.chart.other': 'Onderwerpen met meeste "Overig" (mogelijke content gaps)', 'cm.chart.trend': 'Onderwerpen over tijd',
+    'cm.feedbackTitle': 'Gebruikersfeedback (<span id="fb-count"></span> berichten)',
+    'cm.errorsTitle': 'Gesprekken met foutieve antwoorden (lege responses)',
+    'cm.kpi.feedback': 'Feedbackberichten', 'cm.kpi.feedbackSub': 'Van gebruikers ontvangen', 'cm.kpi.long': 'Sessies met 3+ vragen',
+    'cm.kpi.longSub': '{n} gesprekken — mogelijk herformulering', 'cm.kpi.other': '"Overig" gesprekken',
+    'cm.kpi.otherSub': 'Niet geclassificeerd — mogelijk content gaps', 'cm.kpi.empty': 'Lege bot-antwoorden', 'cm.kpi.emptySub': 'Foutieve responses zonder inhoud',
+    // Technisch Beheer
+    'tech.nav.load': 'Belasting', 'tech.nav.errors': 'Fouten', 'tech.nav.responses': 'Responses',
+    'tech.info.title': 'Dashboard voor Technisch Beheer', 'tech.info.text': 'Focus: stabiliteit, fouten, belasting en systeemprestaties.',
+    'tech.load': 'Belasting', 'tech.chart.hourly': 'Belasting per uur (CET)', 'tech.chart.monthly': 'Gesprekken per maand (trend)',
+    'tech.errors': 'Fouten', 'tech.chart.errors': 'Fouten per maand', 'tech.responses': 'Responses', 'tech.chart.length': 'Antwoordlengte verdeling',
+    'tech.kpi.messages': 'Totaal berichten', 'tech.kpi.errorRate': 'Error rate', 'tech.kpi.empty': '{n} lege responses',
+    'tech.kpi.median': 'Mediaan antwoordlengte', 'tech.kpi.avg': 'Gem. antwoordlengte', 'tech.kpi.chars': 'karakters per bot-response',
+    'tech.kpi.avgTurns': 'Gem. vragen per sessie', 'tech.chars': 'tekens',
+    // Gesprekslogboek
+    'log.info.title': 'Volledig gesprekslogboek',
+    'log.info.text': 'Doorzoek en filter alle <span id="total-convos-log"></span> gesprekken. Klik op een gesprek om het volledige verloop te bekijken.',
+    'log.search': 'Zoek in gesprekken...', 'log.allTopics': 'Alle onderwerpen', 'log.errorsOnly': 'Alleen fouten', 'log.feedbackOnly': 'Alleen met feedback',
+    'log.selected': '<span id="sel-count">0</span> geselecteerd', 'log.export': 'Exporteer selectie (CSV)', 'log.clear': 'Wis selectie',
+    'log.selectAll': 'Selecteer alles op pagina', 'log.found': '{n} gesprekken gevonden', 'log.avgQuestions': 'Gem. {n} vragen', 'log.nErrors': '{n} fouten',
+    'log.prev': 'Vorige', 'log.next': 'Volgende', 'log.page': 'Pagina {a} van {b}', 'log.turns': '{n} vraag/vragen', 'log.csvFile': 'robin-selectie',
+    // RAG & Guardrails
+    'rag.nav.guardrails': 'Guardrails', 'rag.nav.lookup': 'Look-up (RAG)', 'rag.nav.evals': 'Kwaliteitschecks', 'rag.nav.runs': 'Experimentruns',
+    'rag.info.text': 'Wat de guardrails per chatbeurt deden, hoe goed de look-up passende handboeksecties vond, en hoe vaak de kwaliteitschecks (evaluators) slaagden. Eén chatbeurt = één klantbericht met het antwoord van Robin. Cursusgesprekken en experimenten worden nooit bij elkaar opgeteld.',
+    'rag.src.course': 'Cursusgesprekken', 'rag.src.experiment': 'Experimenten', 'rag.generated': 'Data opgehaald: {d}',
+    'rag.chart.outcomes': 'Afloop van chatbeurten per dag', 'rag.chart.guardrails': 'Wat elke guardrail deed (% van alle chatbeurten)',
+    'rag.guardrailNote': 'Ingreep-% telt alleen chatbeurten waarin de guardrail aan stond. De facts check controleert pas als de prompt-injection check het bericht heeft doorgelaten; tegengehouden berichten tellen daar niet mee.',
+    'rag.chart.similarity': 'Beste match per chatbeurt (similarity)', 'rag.chart.sections': 'Vaakst gevonden als beste match',
+    'rag.compareTitle': 'Helpt de look-up? Met en zonder look-up vergeleken', 'rag.weakTitle': 'Zwakste matches',
+    'rag.chart.evals': 'Geslaagd per check (% van de chatbeurten waarop de check draaide)',
+    'rag.noData.title': 'Nog geen data', 'rag.noData.text': 'guardrails-data.json ontbreekt. Draai <code>python dashboard-kit/guardrails_adapter.py</code> vanuit de Robin-map en ververs deze pagina.',
+    'rag.empty.title': 'Geen chatbeurten in deze selectie', 'rag.empty.text': 'Kies een andere periode of bron.',
+    'rag.allRuns': 'Alle experimentruns',
+    'rag.kpi.turns': 'Chatbeurten', 'rag.kpi.turnsCourse': 'cursusgesprekken', 'rag.kpi.turnsExp': 'in experimentruns',
+    'rag.kpi.answered': 'Beantwoord', 'rag.kpi.answeredSub': '{n} antwoorden langs alle guardrails die aan stonden',
+    'rag.kpi.blocked': 'Tegengehouden bij binnenkomst', 'rag.kpi.blockedSub': '{n} keer door de prompt-injection check',
+    'rag.kpi.fallback': 'Vervangen door vast antwoord', 'rag.kpi.fallbackSub': '{n} keer: facts check twee keer niet gehaald',
+    'rag.kpi.allOn': 'Alle guardrails aan', 'rag.kpi.allOnSub': 'look-up aan in {p}',
+    'rag.out.answered': 'Beantwoord', 'rag.out.blocked': 'Tegengehouden bij binnenkomst', 'rag.out.fallback': 'Vast antwoord na facts check', 'rag.out.error': 'Fout',
+    'rag.axis.turns': 'chatbeurten',
+    'rag.g.bank': 'Bankrekeningnummers', 'rag.g.injection': 'Prompt injection', 'rag.g.facts': 'Facts check',
+    'rag.act.bank': 'gemaskeerd', 'rag.act.injection': 'tegengehouden', 'rag.act.facts': 'vast antwoord',
+    'rag.seg.pass': 'Doorgelaten', 'rag.seg.rewrite': 'Doorgelaten na herschrijven', 'rag.seg.block': 'Ingegrepen (gemaskeerd / tegengehouden / vast antwoord)',
+    'rag.seg.error': 'Fout in de check', 'rag.seg.off': 'Uit', 'rag.seg.skipped': 'Niet gecontroleerd (bericht al tegengehouden)',
+    'rag.seg.unknown': 'Onbekend (oude chatbeurten, vóór dit werd vastgelegd)',
+    'rag.th.guardrail': 'Guardrail', 'rag.th.on': 'Stond aan', 'rag.th.pass': 'Doorgelaten', 'rag.th.rewrite': 'Na herschrijven',
+    'rag.th.block': 'Ingegrepen', 'rag.th.error': 'Fout', 'rag.th.rate': 'Ingreep-%',
+    'rag.kpi.lookUp': 'Chatbeurten met look-up', 'rag.kpi.lookUpSub': '{p} van alle chatbeurten',
+    'rag.kpi.median': 'Mediaan beste match', 'rag.kpi.medianSub': 'similarity van de best passende sectie (0–1)',
+    'rag.kpi.weak': 'Zwakke matches', 'rag.kpi.weakSub': '{n} keer beste match onder {t}',
+    'rag.kpi.searchErrors': 'Zoekfouten', 'rag.kpi.searchErrorsSub': 'database niet bereikbaar of zoekopdracht mislukt',
+    'rag.thin.title': 'Weinig data', 'rag.thin.text': 'Maar {n} chatbeurt(en) met look-up in deze selectie, dus de cijfers hieronder zeggen nog weinig.',
+    'rag.thin.hint': ' Kies <b>Experimenten</b> voor de runs met look-up aan.',
+    'rag.hist.axis': 'similarity (geel = onder {t})', 'rag.hist.weak': 'zwakke match', 'rag.hist.label': 'Chatbeurten', 'rag.sections.label': 'Keer beste match',
+    'rag.cmp.with': 'Met look-up', 'rag.cmp.without': 'Zonder look-up', 'rag.cmp.turns': 'Chatbeurten', 'rag.cmp.facts': 'Facts check in één keer gehaald',
+    'rag.cmp.check': 'Check: {name}', 'rag.cmp.note': 'Tussen haakjes: op hoeveel chatbeurten het percentage is gebaseerd. Een check die niet draaide telt niet mee.',
+    'rag.weak.when': 'Wanneer', 'rag.weak.query': 'Zoekvraag (door Robin herschreven)', 'rag.weak.best': 'Beste match', 'rag.weak.none': 'Geen chatbeurten met look-up in deze selectie.',
+    'rag.evals.label': 'Geslaagd', 'rag.evals.tooltip': '{p}% geslaagd ({a} van {b})',
+    'rag.runs.run': 'Run', 'rag.runs.turns': 'Beurten', 'rag.runs.answered': 'Beantwoord', 'rag.runs.facts': 'Facts check in één keer', 'rag.runs.median': 'Mediaan beste match',
+  },
+  en: {
+    'header.subtitle': 'Interactive dashboard for chatbot performance',
+    'tab.po': 'Product Owner', 'tab.cm': 'Content manager', 'tab.tech': 'Technical operations', 'tab.rag': 'RAG & Guardrails', 'tab.log': 'Conversation log',
+    'filter.period': 'Period:', 'filter.all': 'All', 'filter.yesterday': 'Yesterday', 'filter.wtd': 'Week to date',
+    'filter.lastweek': 'Last full week', 'filter.month': 'This month', 'filter.custom': 'Custom', 'filter.until': 'to',
+    'filter.hideTesters': 'Hide test conversations', 'filter.range': '{from} to {to} ({n} conversations)',
+    'loading': 'Loading data...', 'loadError': 'Could not load data: {msg}<br>Make sure dashboard-data.json is in the same folder.',
+    'nav.overview': 'Overview',
+    'common.conversations': 'Conversations', 'common.nConversations': '{n} conversations', 'common.aOfB': '{a} of {b}',
+    'common.aOfBConversations': '{a} of {b} conversations', 'common.date': 'Date', 'common.topic': 'Topic',
+    'common.firstQuestion': 'First question', 'common.questions': 'Questions', 'common.error': 'Error', 'common.errors': 'Errors',
+    'common.feedback': 'Feedback', 'common.view': 'View', 'common.question': 'question', 'common.questionsLower': 'questions',
+    'common.yes': 'Yes', 'common.no': 'No',
+    'days': ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    'months': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    // Product Owner
+    'po.nav.reach': 'Availability', 'po.nav.effect': 'Effectiveness', 'po.nav.trends': 'Trends', 'po.nav.topics': 'Topics', 'po.nav.satisfaction': 'Satisfaction',
+    'po.info.title': 'Dashboard for the Product Owner',
+    'po.info.text': 'Focus: adoption, value for the organisation and reach of Robin. Goal: insight into conversation quality for the Maven course.',
+    'po.chart.hourly': 'Conversations by time of day (CET)', 'po.chart.dow': 'Conversations by day of the week', 'po.chart.monthly': 'Conversations per month',
+    'po.chart.topics': 'Top topics', 'po.chart.turns': 'Single-turn vs. multi-turn', 'po.topicPerf': 'Performance by topic',
+    'po.kpi.total': 'Total conversations', 'po.kpi.noData': 'No data in this period', 'po.kpi.perMonth': 'Average per month',
+    'po.kpi.monthsActive': '{n} months active', 'po.kpi.questions': 'Total questions', 'po.kpi.questionsAvg': '{n} questions per conversation on average',
+    'po.kpi.ratings': 'Ratings', 'po.kpi.pctOfAll': '{p}% of all conversations',
+    'po.effect.info': '<strong>Containment rate</strong>: % of conversations in which the user doesn\'t explicitly ask for a human or another channel. ' +
+      '<strong>First-time resolution</strong>: % of conversations finished without rephrasing (fewer than 3 questions). ' +
+      '<strong>Task completion</strong>: % of conversations the user explicitly rated positive (👍). Only the user can judge whether the task was done.',
+    'po.effect.contained': '{a} of {b} ({e} escalations)',
+    'po.reach.outside': 'Outside office hours', 'po.reach.weekend': 'At the weekend',
+    'po.bsat.response': 'Feedback response',
+    'po.bsat.info': 'BSAT = (👍 positive ratings ÷ total ratings) × 100. Based on thumbs up/down from Flowise. ' +
+      'Response: {rated} of {total} conversations ({rate}%). Of those, {text} also left written feedback. Scores with and without {testers} internal test conversations.',
+    'po.turns.single': 'Single-turn (1 question)', 'po.turns.multi': 'Multi-turn (2+ questions)',
+    // Content manager
+    'cm.nav.length': 'Conversation length', 'cm.nav.gaps': 'Content gaps', 'cm.nav.feedback': 'Feedback', 'cm.nav.errors': 'Errors',
+    'cm.info.title': 'Dashboard for the Content manager / Conversation designer',
+    'cm.info.text': 'Focus: answer quality, content gaps and improvements for the knowledge base.',
+    'cm.length': 'Conversation length', 'cm.chart.length': 'Conversation length (questions per session)', 'cm.gaps': 'Content gaps & topics',
+    'cm.chart.other': 'Topics, with "Other" highlighted (possible content gaps)', 'cm.chart.trend': 'Topics over time',
+    'cm.feedbackTitle': 'User feedback (<span id="fb-count"></span> messages)',
+    'cm.errorsTitle': 'Conversations with faulty answers (empty responses)',
+    'cm.kpi.feedback': 'Feedback messages', 'cm.kpi.feedbackSub': 'Received from users', 'cm.kpi.long': 'Sessions with 3+ questions',
+    'cm.kpi.longSub': '{n} conversations — possibly rephrasing', 'cm.kpi.other': '"Other" conversations',
+    'cm.kpi.otherSub': 'Not classified — possible content gaps', 'cm.kpi.empty': 'Empty bot answers', 'cm.kpi.emptySub': 'Faulty responses without content',
+    // Technical operations
+    'tech.nav.load': 'Load', 'tech.nav.errors': 'Errors', 'tech.nav.responses': 'Responses',
+    'tech.info.title': 'Dashboard for Technical operations', 'tech.info.text': 'Focus: stability, errors, load and system performance.',
+    'tech.load': 'Load', 'tech.chart.hourly': 'Load per hour (CET)', 'tech.chart.monthly': 'Conversations per month (trend)',
+    'tech.errors': 'Errors', 'tech.chart.errors': 'Errors per month', 'tech.responses': 'Responses', 'tech.chart.length': 'Answer length distribution',
+    'tech.kpi.messages': 'Total messages', 'tech.kpi.errorRate': 'Error rate', 'tech.kpi.empty': '{n} empty responses',
+    'tech.kpi.median': 'Median answer length', 'tech.kpi.avg': 'Avg. answer length', 'tech.kpi.chars': 'characters per bot response',
+    'tech.kpi.avgTurns': 'Avg. questions per session', 'tech.chars': 'characters',
+    // Conversation log
+    'log.info.title': 'Full conversation log',
+    'log.info.text': 'Search and filter all <span id="total-convos-log"></span> conversations. Click a conversation to see it in full.',
+    'log.search': 'Search conversations...', 'log.allTopics': 'All topics', 'log.errorsOnly': 'Errors only', 'log.feedbackOnly': 'With feedback only',
+    'log.selected': '<span id="sel-count">0</span> selected', 'log.export': 'Export selection (CSV)', 'log.clear': 'Clear selection',
+    'log.selectAll': 'Select all on this page', 'log.found': '{n} conversations found', 'log.avgQuestions': 'Avg. {n} questions', 'log.nErrors': '{n} errors',
+    'log.prev': 'Previous', 'log.next': 'Next', 'log.page': 'Page {a} of {b}', 'log.turns': '{n} question(s)', 'log.csvFile': 'robin-selection',
+    // RAG & Guardrails
+    'rag.nav.guardrails': 'Guardrails', 'rag.nav.lookup': 'Look-up (RAG)', 'rag.nav.evals': 'Quality checks', 'rag.nav.runs': 'Experiment runs',
+    'rag.info.text': 'What the guardrails did on each chat turn, how well the look-up found matching handbook sections, and how often the quality checks (evaluators) passed. One chat turn = one customer message plus Robin\'s answer. Course chats and experiments are never added together.',
+    'rag.src.course': 'Course chats', 'rag.src.experiment': 'Experiments', 'rag.generated': 'Data fetched: {d}',
+    'rag.chart.outcomes': 'How chat turns ended, per day', 'rag.chart.guardrails': 'What each guardrail did (% of all chat turns)',
+    'rag.guardrailNote': 'Intervention % only counts chat turns in which the guardrail was on. The facts check only runs once the prompt-injection check has let the message through; blocked messages don\'t count there.',
+    'rag.chart.similarity': 'Best match per chat turn (similarity)', 'rag.chart.sections': 'Most often the best match',
+    'rag.compareTitle': 'Does the look-up help? With and without look-up compared', 'rag.weakTitle': 'Weakest matches',
+    'rag.chart.evals': 'Passed per check (% of the chat turns the check ran on)',
+    'rag.noData.title': 'No data yet', 'rag.noData.text': 'guardrails-data.json is missing. Run <code>python dashboard-kit/guardrails_adapter.py</code> from the Robin folder and refresh this page.',
+    'rag.empty.title': 'No chat turns in this selection', 'rag.empty.text': 'Choose a different period or source.',
+    'rag.allRuns': 'All experiment runs',
+    'rag.kpi.turns': 'Chat turns', 'rag.kpi.turnsCourse': 'course chats', 'rag.kpi.turnsExp': 'in experiment runs',
+    'rag.kpi.answered': 'Answered', 'rag.kpi.answeredSub': '{n} answers past every guardrail that was on',
+    'rag.kpi.blocked': 'Blocked on the way in', 'rag.kpi.blockedSub': '{n} times by the prompt-injection check',
+    'rag.kpi.fallback': 'Replaced by a fixed answer', 'rag.kpi.fallbackSub': '{n} times: failed the facts check twice',
+    'rag.kpi.allOn': 'All guardrails on', 'rag.kpi.allOnSub': 'look-up on in {p}',
+    'rag.out.answered': 'Answered', 'rag.out.blocked': 'Blocked on the way in', 'rag.out.fallback': 'Fixed answer after facts check', 'rag.out.error': 'Error',
+    'rag.axis.turns': 'chat turns',
+    'rag.g.bank': 'Bank account numbers', 'rag.g.injection': 'Prompt injection', 'rag.g.facts': 'Facts check',
+    'rag.act.bank': 'masked', 'rag.act.injection': 'blocked', 'rag.act.facts': 'fixed answer',
+    'rag.seg.pass': 'Let through', 'rag.seg.rewrite': 'Let through after a rewrite', 'rag.seg.block': 'Stepped in (masked / blocked / fixed answer)',
+    'rag.seg.error': 'Check failed', 'rag.seg.off': 'Off', 'rag.seg.skipped': 'Not checked (message already blocked)',
+    'rag.seg.unknown': 'Unknown (old chat turns, from before this was recorded)',
+    'rag.th.guardrail': 'Guardrail', 'rag.th.on': 'Was on', 'rag.th.pass': 'Let through', 'rag.th.rewrite': 'After rewrite',
+    'rag.th.block': 'Stepped in', 'rag.th.error': 'Error', 'rag.th.rate': 'Intervention %',
+    'rag.kpi.lookUp': 'Chat turns with look-up', 'rag.kpi.lookUpSub': '{p} of all chat turns',
+    'rag.kpi.median': 'Median best match', 'rag.kpi.medianSub': 'similarity of the best matching section (0–1)',
+    'rag.kpi.weak': 'Weak matches', 'rag.kpi.weakSub': '{n} times the best match was below {t}',
+    'rag.kpi.searchErrors': 'Search errors', 'rag.kpi.searchErrorsSub': 'database unreachable or search failed',
+    'rag.thin.title': 'Not much data', 'rag.thin.text': 'Only {n} chat turn(s) with look-up in this selection, so the numbers below don\'t say much yet.',
+    'rag.thin.hint': ' Choose <b>Experiments</b> for the runs with look-up on.',
+    'rag.hist.axis': 'similarity (yellow = below {t})', 'rag.hist.weak': 'weak match', 'rag.hist.label': 'Chat turns', 'rag.sections.label': 'Times best match',
+    'rag.cmp.with': 'With look-up', 'rag.cmp.without': 'Without look-up', 'rag.cmp.turns': 'Chat turns', 'rag.cmp.facts': 'Passed the facts check first time',
+    'rag.cmp.check': 'Check: {name}', 'rag.cmp.note': 'In brackets: how many chat turns the percentage is based on. A check that didn\'t run isn\'t counted.',
+    'rag.weak.when': 'When', 'rag.weak.query': 'Search query (rewritten by Robin)', 'rag.weak.best': 'Best match', 'rag.weak.none': 'No chat turns with look-up in this selection.',
+    'rag.evals.label': 'Passed', 'rag.evals.tooltip': '{p}% passed ({a} of {b})',
+    'rag.runs.run': 'Run', 'rag.runs.turns': 'Turns', 'rag.runs.answered': 'Answered', 'rag.runs.facts': 'Facts check first time', 'rag.runs.median': 'Median best match',
+  },
+};
+let LANG = 'nl';
+try { if (localStorage.getItem('robin-dashboard-lang') === 'en') LANG = 'en'; } catch (e) { /* storage blocked: stay on Dutch */ }
+
+function t(key, vars) {
+  let text = I18N[LANG][key];
+  if (text === undefined) text = I18N.nl[key] !== undefined ? I18N.nl[key] : key;
+  if (vars && typeof text === 'string') Object.keys(vars).forEach(k => { text = text.split('{' + k + '}').join(vars[k]); });
+  return text;
+}
+function loc() { return LANG === 'en' ? 'en-GB' : 'nl-NL'; }
+
+function applyStaticText() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll('.lang-toggle button').forEach(b => b.classList.toggle('active', b.dataset.lang === LANG));
+}
+
+function setLang(lang) {
+  if (lang === LANG) return;
+  LANG = lang;
+  try { localStorage.setItem('robin-dashboard-lang', lang); } catch (e) { /* not remembered, still switches */ }
+  applyStaticText();
+  if (GR) document.getElementById('rag-generated').textContent = t('rag.generated', { d: formatDate(GR.generatedAt) });
+  if (DATA) rebuildAll();
+}
+
+document.querySelectorAll('.lang-toggle button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+applyStaticText();
+
 // Load data
 fetch('dashboard-data.json')
   .then(r => r.json())
   .then(d => { DATA = d; init(); })
   .catch(e => {
-    document.getElementById('loading').innerHTML = '<p style="color:red">Fout bij laden data: ' + e.message + '<br>Zorg dat dashboard-data.json in dezelfde map staat.</p>';
+    document.getElementById('loading').innerHTML = '<p style="color:red">' + t('loadError', { msg: escapeHtml(e.message) }) + '</p>';
   });
 
 function init() {
@@ -598,7 +927,7 @@ function computeMetrics(convos) {
   m.monthly = {};
   m.hourly = new Array(24).fill(0);
   m.dow = new Array(7).fill(0);
-  m.dowLabels = ['Zondag', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag'];
+  m.dowLabels = t('days');
   m.topicCounts = {};
   m.lengthDist = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6-10': 0, '11+': 0 };
   m.singleTurn = 0;
@@ -738,7 +1067,7 @@ function updateRangeLabel() {
     return day + '-' + m + '-' + y;
   };
   const convos = getFilteredConvLog();
-  label.textContent = fmt(globalDateFrom || '') + ' t/m ' + fmt(globalDateTo || '') + ' (' + convos.length.toLocaleString('nl-NL') + ' gesprekken)';
+  label.textContent = t('filter.range', { from: fmt(globalDateFrom || ''), to: fmt(globalDateTo || ''), n: convos.length.toLocaleString(loc()) });
 }
 
 function rebuildAll() {
@@ -748,6 +1077,7 @@ function rebuildAll() {
   buildPO(m, convos);
   buildCM(m, convos);
   buildTech(m, convos);
+  buildRag();
   buildLog(convos);
 }
 
@@ -868,8 +1198,8 @@ function toggleRow(idx, tr) {
       '<div class="conv-detail-meta">' +
         '<span>' + formatDate(c.time) + '</span> ' +
         '<span class="badge">' + c.topic + '</span> ' +
-        '<span>' + c.turns + ' vraag/vragen</span>' +
-        (c.hasError ? ' <span class="badge err">Fout</span>' : '') +
+        '<span>' + t('log.turns', { n: c.turns }) + '</span>' +
+        (c.hasError ? ' <span class="badge err">' + t('common.error') + '</span>' : '') +
         (c.feedbacks && c.feedbacks.length ? ' <span class="badge fb">Feedback</span>' : '') +
       '</div>' +
       '<iframe class="conv-detail-frame" src="thread-view/dist/index.html?id=' + encodeURIComponent(c.id) + '" loading="lazy"></iframe>' +
@@ -895,10 +1225,10 @@ function buildPO(m, convos) {
 
   // --- Overzicht ---
   document.getElementById('po-kpis').innerHTML =
-    kpiCard(m.totalConversations.toLocaleString('nl-NL'), 'Totaal gesprekken', m.dateRange.from ? formatDate(m.dateRange.from) + ' – ' + formatDate(m.dateRange.to) : 'Geen data in deze periode') +
-    kpiCard(avgPerMonth.toLocaleString('nl-NL'), 'Gemiddeld per maand', numMonths + ' maanden actief') +
-    kpiCard(m.totalUserMessages.toLocaleString('nl-NL'), 'Totaal vragen', m.avgTurns + ' vragen/gesprek gemiddeld') +
-    kpiCard(m.convosWithFeedback.toLocaleString('nl-NL'), 'Beoordelingen', ((m.convosWithFeedback / m.totalConversations) * 100).toFixed(1) + '% van alle gesprekken');
+    kpiCard(m.totalConversations.toLocaleString(loc()), t('po.kpi.total'), m.dateRange.from ? formatDate(m.dateRange.from) + ' – ' + formatDate(m.dateRange.to) : t('po.kpi.noData')) +
+    kpiCard(avgPerMonth.toLocaleString(loc()), t('po.kpi.perMonth'), t('po.kpi.monthsActive', { n: numMonths })) +
+    kpiCard(m.totalUserMessages.toLocaleString(loc()), t('po.kpi.questions'), t('po.kpi.questionsAvg', { n: m.avgTurns })) +
+    kpiCard(m.convosWithFeedback.toLocaleString(loc()), t('po.kpi.ratings'), t('po.kpi.pctOfAll', { p: ((m.convosWithFeedback / m.totalConversations) * 100).toFixed(1) }));
 
   // --- Effectiviteit ---
   // Containment: conversations where user did NOT explicitly ask for a human/other channel
@@ -928,20 +1258,18 @@ function buildPO(m, convos) {
   const taskCompleted = convos.filter(c => c.thumbs && c.thumbs.positive).length;
   const taskCompletionRate = m.totalConversations > 0 ? ((taskCompleted / m.totalConversations) * 100).toFixed(1) : '0';
 
-  document.getElementById('effectiveness-info').innerHTML =
-    '<strong>Containment rate</strong>: % gesprekken waarin de gebruiker niet expliciet om een medewerker of ander kanaal vraagt. ' +
-    '<strong>First-time resolution</strong>: % gesprekken afgerond zonder herformulering (minder dan 3 vragen). ' +
-    '<strong>Task completion</strong>: % gesprekken met expliciete positieve beoordeling (👍) door de gebruiker. Alleen de gebruiker kan beoordelen of de taak volbracht is.';
+  document.getElementById('effectiveness-info').innerHTML = t('po.effect.info');
 
+  const total = m.totalConversations.toLocaleString(loc());
   document.getElementById('po-effectiveness').innerHTML =
-    kpiCard(containmentRate + '%', 'Containment rate', contained.toLocaleString('nl-NL') + ' van ' + m.totalConversations.toLocaleString('nl-NL') + ' (' + escalated + ' escalaties)', parseFloat(containmentRate) >= 95 ? 'green' : parseFloat(containmentRate) >= 85 ? 'yellow' : 'red') +
-    kpiCard(ftrRate + '%', 'First-time resolution', resolvedNoRephrase.toLocaleString('nl-NL') + ' van ' + m.totalConversations.toLocaleString('nl-NL') + ' gesprekken', parseFloat(ftrRate) >= 70 ? 'green' : parseFloat(ftrRate) >= 50 ? 'yellow' : 'red') +
-    kpiCard(taskCompletionRate + '%', 'Task completion', taskCompleted.toLocaleString('nl-NL') + ' van ' + m.totalConversations.toLocaleString('nl-NL') + ' gesprekken', parseFloat(taskCompletionRate) >= 60 ? 'green' : parseFloat(taskCompletionRate) >= 40 ? 'yellow' : 'red');
+    kpiCard(containmentRate + '%', 'Containment rate', t('po.effect.contained', { a: contained.toLocaleString(loc()), b: total, e: escalated }), parseFloat(containmentRate) >= 95 ? 'green' : parseFloat(containmentRate) >= 85 ? 'yellow' : 'red') +
+    kpiCard(ftrRate + '%', 'First-time resolution', t('common.aOfBConversations', { a: resolvedNoRephrase.toLocaleString(loc()), b: total }), parseFloat(ftrRate) >= 70 ? 'green' : parseFloat(ftrRate) >= 50 ? 'yellow' : 'red') +
+    kpiCard(taskCompletionRate + '%', 'Task completion', t('common.aOfBConversations', { a: taskCompleted.toLocaleString(loc()), b: total }), parseFloat(taskCompletionRate) >= 60 ? 'green' : parseFloat(taskCompletionRate) >= 40 ? 'yellow' : 'red');
 
   // --- Bereikbaarheid ---
   document.getElementById('po-bereik-kpis').innerHTML =
-    kpiCard(m.buitenKantoorPct + '%', 'Buiten kantoortijden', m.buitenKantoor.toLocaleString('nl-NL') + ' gesprekken', 'green') +
-    kpiCard(m.weekendPct + '%', 'In het weekend', m.weekendConvos.toLocaleString('nl-NL') + ' gesprekken', 'green');
+    kpiCard(m.buitenKantoorPct + '%', t('po.reach.outside'), t('common.nConversations', { n: m.buitenKantoor.toLocaleString(loc()) }), 'green') +
+    kpiCard(m.weekendPct + '%', t('po.reach.weekend'), t('common.nConversations', { n: m.weekendConvos.toLocaleString(loc()) }), 'green');
 
   // --- BSAT ---
   const b = m.bsat;
@@ -950,14 +1278,11 @@ function buildPO(m, convos) {
   document.getElementById('po-bsat').innerHTML =
     kpiCard(b.corrected.score !== null ? b.corrected.score + '%' : '\u2013', 'BSAT (excl. testers)', '\uD83D\uDC4D ' + b.corrected.positive + ' \u00b7 \uD83D\uDC4E ' + b.corrected.negative + ' \u00b7 n=' + b.corrected.total, bsatColor(b.corrected.score)) +
     kpiCard(b.all.score !== null ? b.all.score + '%' : '\u2013', 'BSAT (incl. testers)', '\uD83D\uDC4D ' + b.all.positive + ' \u00b7 \uD83D\uDC4E ' + b.all.negative + ' \u00b7 n=' + b.all.total, bsatColor(b.all.score)) +
-    kpiCard(responseRate + '%', 'Feedbackrespons', m.convosWithFeedback + ' van ' + m.totalConversations.toLocaleString('nl-NL') + ' gesprekken');
+    kpiCard(responseRate + '%', t('po.bsat.response'), t('common.aOfBConversations', { a: m.convosWithFeedback, b: m.totalConversations.toLocaleString(loc()) }));
 
-  document.getElementById('bsat-info-text').innerHTML =
-    'BSAT = (\uD83D\uDC4D positieve beoordelingen \u00f7 totaal beoordelingen) \u00d7 100. ' +
-    'Gebaseerd op duimpjes (thumbs up/down) uit Flowise. ' +
-    'Respons: ' + m.convosWithFeedback + ' van ' + m.totalConversations.toLocaleString('nl-NL') + ' gesprekken (' + responseRate + '%). ' +
-    'Daarvan hebben ' + m.feedbackCount + ' ook tekst-feedback achtergelaten. ' +
-    'Scores met en zonder ' + (m.testerCount || 0) + ' interne testgesprekken.';
+  document.getElementById('bsat-info-text').innerHTML = t('po.bsat.info', {
+    rated: m.convosWithFeedback, total: m.totalConversations.toLocaleString(loc()), rate: responseRate,
+    text: m.feedbackCount, testers: m.testerCount || 0 });
 
   // --- Topic performance table ---
   const topicPerf = {};
@@ -975,7 +1300,7 @@ function buildPO(m, convos) {
   const topicRows = Object.entries(topicPerf).sort((a, b) => b[1].total - a[1].total);
   const maxTopicCount = topicRows.length > 0 ? topicRows[0][1].total : 1;
 
-  let tableHtml = '<table class="topic-table"><thead><tr><th>Onderwerp</th><th class="num">Gesprekken</th><th class="num">%</th><th class="num">Containment</th><th class="num">BSAT</th><th class="num">\uD83D\uDC4D</th><th class="num">\uD83D\uDC4E</th></tr></thead><tbody>';
+  let tableHtml = '<table class="topic-table"><thead><tr><th>' + t('common.topic') + '</th><th class="num">' + t('common.conversations') + '</th><th class="num">%</th><th class="num">Containment</th><th class="num">BSAT</th><th class="num">\uD83D\uDC4D</th><th class="num">\uD83D\uDC4E</th></tr></thead><tbody>';
   topicRows.forEach(([topic, tp]) => {
     const pct = m.totalConversations > 0 ? ((tp.total / m.totalConversations) * 100).toFixed(1) : '0';
     const containment = tp.total > 0 ? ((tp.single / tp.total) * 100).toFixed(0) : '-';
@@ -984,7 +1309,7 @@ function buildPO(m, convos) {
     const barWidth = ((tp.total / maxTopicCount) * 100).toFixed(0);
     tableHtml += '<tr style="cursor:pointer" onclick="navigateToLog({topic:\'' + topic.replace(/'/g, "\\'") + '\'})">' +
       '<td>' + topic + '</td>' +
-      '<td class="num">' + tp.total.toLocaleString('nl-NL') + '</td>' +
+      '<td class="num">' + tp.total.toLocaleString(loc()) + '</td>' +
       '<td class="num">' + pct + '%</td>' +
       '<td class="num">' + containment + '%</td>' +
       '<td class="num" style="font-weight:600;' + bsatClass + '">' + (bsat === '-' ? '\u2013' : bsat + '%') + '</td>' +
@@ -1006,7 +1331,7 @@ function buildPO(m, convos) {
 
   makeChart('chart-monthly', {
     type: 'bar',
-    data: { labels: months.map(formatMonth), datasets: [{ label: 'Gesprekken', data: months.map(mo => m.monthly[mo]), backgroundColor: '#2563eb', borderRadius: 6 }] },
+    data: { labels: months.map(formatMonth), datasets: [{ label: t('common.conversations'), data: months.map(mo => m.monthly[mo]), backgroundColor: '#2563eb', borderRadius: 6 }] },
     options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } },
       onClick: (evt, els) => {
         if (els.length > 0) {
@@ -1019,7 +1344,7 @@ function buildPO(m, convos) {
     plugins: [clickableCursor]
   });
 
-  const topicEntries = Object.entries(m.topicCounts).filter(([k]) => k !== 'Overig').sort((a, b) => b[1] - a[1]);
+  const topicEntries = Object.entries(m.topicCounts).filter(([k]) => !isOtherTopic(k)).sort((a, b) => b[1] - a[1]);
   makeChart('chart-topics', {
     type: 'bar',
     data: { labels: topicEntries.map(([k]) => k), datasets: [{ data: topicEntries.map(([, v]) => v), backgroundColor: topicEntries.map((_, i) => `hsl(${210 + i * 20}, 70%, ${50 + (i % 3) * 10}%)`), borderRadius: 6 }] },
@@ -1038,7 +1363,7 @@ function buildPO(m, convos) {
   const hourLabels = Array.from({ length: 24 }, (_, i) => i + ':00');
   makeChart('chart-hourly', {
     type: 'bar',
-    data: { labels: hourLabels, datasets: [{ label: 'Gesprekken', data: m.hourly, backgroundColor: m.hourly.map((_, i) => (i >= 8 && i < 18) ? '#2563eb' : '#10b981'), borderRadius: 4 }] },
+    data: { labels: hourLabels, datasets: [{ label: t('common.conversations'), data: m.hourly, backgroundColor: m.hourly.map((_, i) => (i >= 8 && i < 18) ? '#2563eb' : '#10b981'), borderRadius: 4 }] },
     options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
 
@@ -1050,7 +1375,7 @@ function buildPO(m, convos) {
 
   makeChart('chart-turns', {
     type: 'doughnut',
-    data: { labels: ['Single-turn (1 vraag)', 'Multi-turn (2+ vragen)'], datasets: [{ data: [m.singleTurn, m.multiTurn], backgroundColor: ['#2563eb', '#10b981'] }] },
+    data: { labels: [t('po.turns.single'), t('po.turns.multi')], datasets: [{ data: [m.singleTurn, m.multiTurn], backgroundColor: ['#2563eb', '#10b981'] }] },
     options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
   });
 
@@ -1061,22 +1386,22 @@ function buildPO(m, convos) {
 // ========== CONTENTMANAGER ==========
 function buildCM(m, convos) {
   document.getElementById('cm-kpis').innerHTML =
-    kpiCard(m.feedbackCount, 'Feedbackberichten', 'Van gebruikers ontvangen') +
-    kpiCard(m.rephrasePct + '%', 'Sessies met 3+ vragen', m.rephraseSessions + ' gesprekken — mogelijk herformulering', 'yellow') +
-    kpiCard((m.topicCounts['Overig'] || 0).toLocaleString('nl-NL'), '"Overig" gesprekken', 'Niet geclassificeerd — mogelijk content gaps', 'yellow') +
-    kpiCard(m.emptyResponses, 'Lege bot-antwoorden', 'Foutieve responses zonder inhoud', 'red');
+    kpiCard(m.feedbackCount, t('cm.kpi.feedback'), t('cm.kpi.feedbackSub')) +
+    kpiCard(m.rephrasePct + '%', t('cm.kpi.long'), t('cm.kpi.longSub', { n: m.rephraseSessions }), 'yellow') +
+    kpiCard(Object.entries(m.topicCounts).filter(([k]) => isOtherTopic(k)).reduce((s, [, v]) => s + v, 0).toLocaleString(loc()), t('cm.kpi.other'), t('cm.kpi.otherSub'), 'yellow') +
+    kpiCard(m.emptyResponses, t('cm.kpi.empty'), t('cm.kpi.emptySub'), 'red');
 
   const ld = m.lengthDist;
   makeChart('chart-convlength', {
     type: 'bar',
-    data: { labels: Object.keys(ld).map(k => k + (k === '1' ? ' vraag' : ' vragen')), datasets: [{ data: Object.values(ld), backgroundColor: Object.keys(ld).map((_, i) => i <= 1 ? '#2563eb' : i <= 3 ? '#f59e0b' : '#ef4444'), borderRadius: 6 }] },
+    data: { labels: Object.keys(ld).map(k => k + ' ' + (k === '1' ? t('common.question') : t('common.questionsLower'))), datasets: [{ data: Object.values(ld), backgroundColor: Object.keys(ld).map((_, i) => i <= 1 ? '#2563eb' : i <= 3 ? '#f59e0b' : '#ef4444'), borderRadius: 6 }] },
     options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
 
   const topicAll = Object.entries(m.topicCounts).sort((a, b) => b[1] - a[1]);
   makeChart('chart-topics-cm', {
     type: 'bar',
-    data: { labels: topicAll.map(([k]) => k), datasets: [{ data: topicAll.map(([, v]) => v), backgroundColor: topicAll.map(([k]) => k === 'Overig' ? '#ef4444' : '#2563eb'), borderRadius: 6 }] },
+    data: { labels: topicAll.map(([k]) => k), datasets: [{ data: topicAll.map(([, v]) => v), backgroundColor: topicAll.map(([k]) => isOtherTopic(k) ? '#ef4444' : '#2563eb'), borderRadius: 6 }] },
     options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
   });
 
@@ -1101,7 +1426,7 @@ function buildCM(m, convos) {
   tbody.innerHTML = '';
   m.feedbacks.forEach(fb => {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + formatDate(fb.time) + '</td><td>' + escapeHtml(fb.feedback) + '</td><td><button onclick="openConvoById(\'' + fb.convId + '\')">Bekijk</button></td>';
+    tr.innerHTML = '<td>' + formatDate(fb.time) + '</td><td>' + escapeHtml(fb.feedback) + '</td><td><button onclick="openConvoById(\'' + fb.convId + '\')">' + t('common.view') + '</button></td>';
     tbody.appendChild(tr);
   });
 
@@ -1122,16 +1447,16 @@ function buildCM(m, convos) {
 // ========== TECHNISCH BEHEER ==========
 function buildTech(m, convos) {
   document.getElementById('tech-kpis').innerHTML =
-    kpiCard(m.totalMessages.toLocaleString('nl-NL'), 'Totaal berichten', m.totalUserMessages + ' user + ' + (m.totalMessages - m.totalUserMessages) + ' bot') +
-    kpiCard(m.errorRate + '%', 'Error rate', m.emptyResponses + ' lege responses', parseFloat(m.errorRate) > 5 ? 'red' : parseFloat(m.errorRate) > 2 ? 'yellow' : 'green') +
-    kpiCard(m.medianBotLength, 'Mediaan antwoordlengte', 'karakters per bot-response') +
-    kpiCard(m.avgBotLength, 'Gem. antwoordlengte', 'karakters per bot-response') +
-    kpiCard(m.avgTurns, 'Gem. vragen per sessie', '');
+    kpiCard(m.totalMessages.toLocaleString(loc()), t('tech.kpi.messages'), m.totalUserMessages + ' user + ' + (m.totalMessages - m.totalUserMessages) + ' bot') +
+    kpiCard(m.errorRate + '%', t('tech.kpi.errorRate'), t('tech.kpi.empty', { n: m.emptyResponses }), parseFloat(m.errorRate) > 5 ? 'red' : parseFloat(m.errorRate) > 2 ? 'yellow' : 'green') +
+    kpiCard(m.medianBotLength, t('tech.kpi.median'), t('tech.kpi.chars')) +
+    kpiCard(m.avgBotLength, t('tech.kpi.avg'), t('tech.kpi.chars')) +
+    kpiCard(m.avgTurns, t('tech.kpi.avgTurns'), '');
 
   const hourLabels = Array.from({ length: 24 }, (_, i) => i + ':00');
   makeChart('chart-hourly-tech', {
     type: 'line',
-    data: { labels: hourLabels, datasets: [{ label: 'Gesprekken', data: m.hourly, borderColor: '#2563eb', backgroundColor: '#2563eb20', fill: true, tension: 0.3 }] },
+    data: { labels: hourLabels, datasets: [{ label: t('common.conversations'), data: m.hourly, borderColor: '#2563eb', backgroundColor: '#2563eb20', fill: true, tension: 0.3 }] },
     options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
 
@@ -1144,7 +1469,7 @@ function buildTech(m, convos) {
   });
   makeChart('chart-errors-monthly', {
     type: 'bar',
-    data: { labels: months.map(formatMonth), datasets: [{ label: 'Fouten', data: months.map(mo => errorsMonthly[mo] || 0), backgroundColor: '#ef4444', borderRadius: 6 }] },
+    data: { labels: months.map(formatMonth), datasets: [{ label: t('common.errors'), data: months.map(mo => errorsMonthly[mo] || 0), backgroundColor: '#ef4444', borderRadius: 6 }] },
     options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
 
@@ -1163,25 +1488,301 @@ function buildTech(m, convos) {
   });
   makeChart('chart-response-length', {
     type: 'bar',
-    data: { labels: Object.keys(lengthBuckets).map(k => k + ' tekens'), datasets: [{ data: Object.values(lengthBuckets), backgroundColor: '#8b5cf6', borderRadius: 6 }] },
+    data: { labels: Object.keys(lengthBuckets).map(k => k + ' ' + t('tech.chars')), datasets: [{ data: Object.values(lengthBuckets), backgroundColor: '#8b5cf6', borderRadius: 6 }] },
     options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
 
   makeChart('chart-monthly-tech', {
     type: 'line',
-    data: { labels: months.map(formatMonth), datasets: [{ label: 'Gesprekken', data: months.map(mo => m.monthly[mo]), borderColor: '#2563eb', backgroundColor: '#2563eb20', fill: true, tension: 0.3 }] },
+    data: { labels: months.map(formatMonth), datasets: [{ label: t('common.conversations'), data: months.map(mo => m.monthly[mo]), borderColor: '#2563eb', backgroundColor: '#2563eb20', fill: true, tension: 0.3 }] },
     options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
 }
 
+// ========== RAG & GUARDRAILS ==========
+// Data: guardrails-data.json, written by guardrails_adapter.py (one record per chat turn).
+let GR = null;          // null = still loading, false = not available
+let ragSource = 'course';
+let ragRun = '';
+const WEAK_MATCH = 0.35; // rule of thumb: a best match below this similarity probably isn't about the question
+// Status colours: they mean the same thing in every chart on this tab.
+const ST = { pass: '#0ca30c', rewrite: '#fab219', block: '#ec835a', error: '#d03b3b', off: '#c3c2b7' };
+const RAG_BLUE = '#2a78d6';
+
+fetch('guardrails-data.json')
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(d => { GR = d; initRagControls(); if (DATA) buildRag(); })
+  .catch(() => { GR = false; if (DATA) buildRag(); });
+
+function initRagControls() {
+  document.querySelectorAll('#rag-source button').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('#rag-source button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ragSource = btn.dataset.source;
+    ragRun = '';
+    buildRag();
+  }));
+  document.getElementById('rag-run').addEventListener('change', e => { ragRun = e.target.value; buildRag(); });
+  document.getElementById('rag-generated').textContent = t('rag.generated', { d: formatDate(GR.generatedAt) });
+}
+
+function ragTurns() {
+  const excludeTesters = document.getElementById('exclude-testers').checked;
+  return GR.turns.filter(t => {
+    if (t.source !== ragSource) return false;
+    if (ragRun && t.run !== ragRun) return false;
+    if (excludeTesters && t.isTester) return false;
+    const d = (t.time || '').substring(0, 10);
+    if (globalDateFrom && d < globalDateFrom) return false;
+    if (globalDateTo && d > globalDateTo) return false;
+    return true;
+  });
+}
+
+function pct(a, b) { return b ? Math.round(100 * a / b) + '%' : '–'; }
+function pctNum(a, b) { return b ? Math.round(1000 * a / b) / 10 : 0; }
+function nl(n) { return n.toLocaleString(loc()); }
+function median(xs) { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b); const i = Math.floor(s.length / 2); return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2; }
+
+// What one guardrail did across these turns. Each turn lands in exactly one bucket.
+function guardrailBuckets(turns, key) {
+  const b = { pass: 0, rewrite: 0, block: 0, error: 0, off: 0, skipped: 0, unknown: 0 };
+  turns.forEach(t => {
+    const v = t[key];
+    if (v === 'PASS') { if (key === 'facts' && t.rewrite) b.rewrite++; else b.pass++; }
+    else if (v === 'BLOCK' || v === 'MASKED') b.block++;
+    else if (v === 'ERROR') b.error++;
+    else if (v === 'OFF') b.off++;
+    else if (v === 'SKIPPED') b.skipped++;
+    else b.unknown++;
+  });
+  b.active = b.pass + b.rewrite + b.block + b.error;
+  return b;
+}
+
+function ragTable(headers, rows, numericFrom) {
+  const nf = numericFrom === undefined ? 1 : numericFrom;
+  return '<div style="overflow-x:auto"><table class="topic-table"><thead><tr>' + headers.map((h, i) => '<th' + (i >= nf ? ' style="text-align:right"' : '') + '>' + h + '</th>').join('') +
+    '</tr></thead><tbody>' + rows.map(r => '<tr>' + r.map((c, i) => '<td class="' + (i >= nf ? 'num' : '') + '">' + c + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+}
+
+function buildRag() {
+  if (!DATA || GR === null) return;
+  const empty = document.getElementById('rag-empty');
+  const sections = document.querySelectorAll('#tab-rag .po-section');
+  if (GR === false) {
+    empty.style.display = '';
+    empty.innerHTML = '<h4>' + t('rag.noData.title') + '</h4><p>' + t('rag.noData.text') + '</p>';
+    sections.forEach(s => s.style.display = 'none');
+    return;
+  }
+
+  // Experiment run picker
+  const runSel = document.getElementById('rag-run');
+  runSel.style.display = ragSource === 'experiment' ? '' : 'none';
+  if (ragSource === 'experiment') {
+    const runs = [...new Set(GR.turns.filter(t => t.source === 'experiment').map(t => t.run))].sort().reverse();
+    runSel.innerHTML = '<option value="">' + t('rag.allRuns') + '</option>' + runs.map(r => '<option value="' + escapeHtml(r) + '"' + (r === ragRun ? ' selected' : '') + '>' + escapeHtml(r) + '</option>').join('');
+  }
+  document.querySelector('#rag-runs').style.display = ragSource === 'experiment' ? '' : 'none';
+  document.querySelector('#tab-rag .section-nav a[href="#rag-runs"]').style.display = ragSource === 'experiment' ? '' : 'none';
+
+  const turns = ragTurns();
+  if (!turns.length) {
+    empty.style.display = '';
+    empty.innerHTML = '<h4>' + t('rag.empty.title') + '</h4><p>' + t('rag.empty.text') + '</p>';
+    sections.forEach(s => s.style.display = 'none');
+    return;
+  }
+  empty.style.display = 'none';
+  sections.forEach(s => { if (s.id !== 'rag-runs') s.style.display = ''; });
+
+  buildRagOverview(turns);
+  buildRagGuardrails(turns);
+  buildRagLookup(turns);
+  buildRagEvals(turns);
+  if (ragSource === 'experiment') buildRagRuns();
+}
+
+function buildRagOverview(turns) {
+  const n = turns.length;
+  const count = o => turns.filter(t => t.outcome === o).length;
+  const allOn = turns.filter(t => ['bank', 'injection', 'facts'].every(k => t[k] !== 'OFF' && t[k] !== 'UNKNOWN')).length;
+  const lookUp = turns.filter(t => t.lookUp).length;
+  document.getElementById('rag-kpis').innerHTML =
+    kpiCard(nl(n), t('rag.kpi.turns'), ragSource === 'course' ? t('rag.kpi.turnsCourse') : t('rag.kpi.turnsExp')) +
+    kpiCard(pct(count('answered'), n), t('rag.kpi.answered'), t('rag.kpi.answeredSub', { n: nl(count('answered')) }), 'green') +
+    kpiCard(pct(count('blocked by input guardrail'), n), t('rag.kpi.blocked'), t('rag.kpi.blockedSub', { n: nl(count('blocked by input guardrail')) }), 'yellow') +
+    kpiCard(pct(count('fallback after output guardrail'), n), t('rag.kpi.fallback'), t('rag.kpi.fallbackSub', { n: nl(count('fallback after output guardrail')) }), 'yellow') +
+    kpiCard(pct(allOn, n), t('rag.kpi.allOn'), t('rag.kpi.allOnSub', { p: pct(lookUp, n) }));
+
+  const days = [...new Set(turns.map(x => x.time.substring(0, 10)))].sort();
+  const series = [
+    ['answered', t('rag.out.answered'), ST.pass],
+    ['blocked by input guardrail', t('rag.out.blocked'), ST.block],
+    ['fallback after output guardrail', t('rag.out.fallback'), ST.rewrite],
+    ['error', t('rag.out.error'), ST.error],
+  ];
+  makeChart('chart-rag-outcomes', {
+    type: 'bar',
+    data: {
+      labels: days.map(d => { const [y, m, dd] = d.split('-'); return dd + '-' + m; }),
+      datasets: series.map(([key, label, color]) => ({
+        label, backgroundColor: color, borderColor: '#ffffff', borderWidth: 1, borderRadius: 4, maxBarThickness: 40,
+        data: days.map(d => turns.filter(t => t.outcome === key && t.time.startsWith(d)).length),
+      })).filter(ds => ds.data.some(v => v)),
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index' } },
+               scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: t('rag.axis.turns') } } } }
+  });
+}
+
+function buildRagGuardrails(turns) {
+  const n = turns.length;
+  const defs = [['bank', t('rag.g.bank'), t('rag.act.bank')], ['injection', t('rag.g.injection'), t('rag.act.injection')], ['facts', t('rag.g.facts'), t('rag.act.facts')]];
+  const data = defs.map(([key]) => guardrailBuckets(turns, key));
+  const segs = [
+    ['pass', t('rag.seg.pass'), ST.pass],
+    ['rewrite', t('rag.seg.rewrite'), ST.rewrite],
+    ['block', t('rag.seg.block'), ST.block],
+    ['error', t('rag.seg.error'), ST.error],
+    ['off', t('rag.seg.off'), ST.off],
+    ['skipped', t('rag.seg.skipped'), '#e1e0d9'],
+    ['unknown', t('rag.seg.unknown'), '#f1f0ea'],
+  ];
+  makeChart('chart-rag-guardrails', {
+    type: 'bar',
+    data: {
+      labels: defs.map(d => d[1]),
+      datasets: segs.map(([key, label, color]) => ({
+        label, backgroundColor: color, borderColor: '#ffffff', borderWidth: 2, borderSkipped: false, maxBarThickness: 34,
+        data: data.map(b => pctNum(b[key], n)), counts: data.map(b => b[key]),
+      })).filter(ds => ds.counts.some(v => v)),
+    },
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend: { position: 'bottom' },
+                 tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.raw + '% (' + c.dataset.counts[c.dataIndex] + ')' } } },
+      scales: { x: { stacked: true, max: 100, ticks: { callback: v => v + '%' } }, y: { stacked: true, grid: { display: false } } }
+    }
+  });
+
+  const rows = defs.map(([key, label, actionLabel], i) => {
+    const b = data[i];
+    return [label, nl(b.active) + ' <span class="rag-note">(' + pct(b.active, n) + ')</span>', nl(b.pass),
+            key === 'facts' ? nl(b.rewrite) : '–', nl(b.block) + ' <span class="rag-note">' + actionLabel + '</span>',
+            nl(b.error), '<b>' + pct(b.block, b.active) + '</b>'];
+  });
+  document.getElementById('rag-guardrail-table').innerHTML =
+    ragTable(['rag.th.guardrail', 'rag.th.on', 'rag.th.pass', 'rag.th.rewrite', 'rag.th.block', 'rag.th.error', 'rag.th.rate'].map(k => t(k)), rows);
+}
+
+function buildRagLookup(turns) {
+  const withLookUp = turns.filter(t => t.lookUp);
+  const searched = withLookUp.filter(t => t.sections.length);
+  const tops = searched.map(t => t.sections[0][1]);
+  const weak = searched.filter(t => t.sections[0][1] < WEAK_MATCH);
+  const errors = withLookUp.filter(t => t.searchError).length;
+  const med = median(tops);
+  document.getElementById('rag-lookup-kpis').innerHTML =
+    kpiCard(nl(withLookUp.length), t('rag.kpi.lookUp'), t('rag.kpi.lookUpSub', { p: pct(withLookUp.length, turns.length) })) +
+    kpiCard(med === null ? '–' : med.toFixed(2), t('rag.kpi.median'), t('rag.kpi.medianSub')) +
+    kpiCard(pct(weak.length, searched.length), t('rag.kpi.weak'), t('rag.kpi.weakSub', { n: nl(weak.length), t: WEAK_MATCH }), weak.length / (searched.length || 1) > 0.25 ? 'yellow' : 'green') +
+    kpiCard(nl(errors), t('rag.kpi.searchErrors'), t('rag.kpi.searchErrorsSub'), errors ? 'red' : 'green');
+
+  const thin = document.getElementById('rag-lookup-thin');
+  thin.style.display = withLookUp.length < 10 ? '' : 'none';
+  thin.innerHTML = '<h4>' + t('rag.thin.title') + '</h4><p>' + t('rag.thin.text', { n: withLookUp.length }) +
+    (ragSource === 'course' ? t('rag.thin.hint') : '') + '</p>';
+
+  // Similarity histogram: one hue, it's a magnitude.
+  const buckets = [];
+  for (let lo = 0.1; lo < 0.8; lo += 0.05) buckets.push(Math.round(lo * 100) / 100);
+  makeChart('chart-rag-similarity', {
+    type: 'bar',
+    data: {
+      labels: buckets.map(lo => lo.toFixed(2) + '–' + (lo + 0.05).toFixed(2)),
+      datasets: [{ label: t('rag.hist.label'), borderRadius: 4, borderColor: '#ffffff', borderWidth: 1,
+                   backgroundColor: buckets.map(lo => lo + 0.05 <= WEAK_MATCH ? ST.rewrite : RAG_BLUE),
+                   // Whole-number bucket index (0.35 -> 7), so a score on a bucket edge is counted once.
+                   data: buckets.map(lo => tops.filter(s => Math.floor(s * 20 + 1e-9) === Math.round(lo * 20)).length) }],
+    },
+    options: { responsive: true, plugins: { legend: { display: false },
+               tooltip: { callbacks: { afterLabel: c => buckets[c.dataIndex] + 0.05 <= WEAK_MATCH ? t('rag.hist.weak') : '' } } },
+               scales: { x: { grid: { display: false }, title: { display: true, text: t('rag.hist.axis', { t: WEAK_MATCH }) } }, y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+
+  const sectionCounts = {};
+  searched.forEach(t => { const s = t.sections[0][0]; sectionCounts[s] = (sectionCounts[s] || 0) + 1; });
+  const top = Object.entries(sectionCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  makeChart('chart-rag-sections', {
+    type: 'bar',
+    data: { labels: top.map(e => e[0]), datasets: [{ label: t('rag.sections.label'), data: top.map(e => e[1]), backgroundColor: RAG_BLUE, borderRadius: 4, maxBarThickness: 24 }] },
+    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { grid: { display: false } } } }
+  });
+
+  // With vs without look-up: only turns that reached the facts check / were scored.
+  const groups = [[t('rag.cmp.with'), turns.filter(x => x.lookUp)], [t('rag.cmp.without'), turns.filter(x => !x.lookUp)]];
+  const evalRate = (list, name) => { const s = list.filter(t => name in t.evals); return s.length ? pct(s.filter(t => t.evals[name]).length, s.length) + ' <span class="rag-note">(' + s.length + ')</span>' : '–'; };
+  const factsRate = list => { const b = guardrailBuckets(list, 'facts'); return b.active ? pct(b.pass, b.active) + ' <span class="rag-note">(' + b.active + ')</span>' : '–'; };
+  document.getElementById('rag-compare-table').innerHTML = ragTable(
+    ['', t('rag.cmp.turns'), t('rag.cmp.facts'), t('rag.cmp.check', { name: 'only facts from the policy' }), t('rag.cmp.check', { name: 'matches the good answer' })],
+    groups.map(([label, list]) => [label, nl(list.length), factsRate(list), evalRate(list, 'only facts from the policy'), evalRate(list, 'matches the good answer')])
+  ) + '<p class="rag-note" style="margin-top:8px">' + t('rag.cmp.note') + '</p>';
+
+  const weakest = [...searched].sort((a, b) => a.sections[0][1] - b.sections[0][1]).slice(0, 10);
+  document.getElementById('rag-weak-table').innerHTML = weakest.length ? ragTable(
+    [t('rag.weak.when'), t('rag.weak.query'), t('rag.weak.best'), 'Similarity', ''],
+    weakest.map(t => [formatDateShort(t.time), '<span title="' + escapeHtml(t.query || '') + '">' + escapeHtml(t.query || '–') + '</span>',
+                      escapeHtml(t.sections[0][0]), t.sections[0][1].toFixed(3), '<a href="' + t.url + '" target="_blank" rel="noopener">Langfuse ↗</a>']),
+    3).replace(/<td class="">(<span title)/g, '<td class="query">$1') : '<p class="rag-note">' + t('rag.weak.none') + '</p>';
+}
+
+function buildRagEvals(turns) {
+  const names = [...new Set(turns.flatMap(t => Object.keys(t.evals)))];
+  const stats = names.map(name => {
+    const scored = turns.filter(t => name in t.evals);
+    return { name, n: scored.length, pass: scored.filter(t => t.evals[name]).length };
+  }).sort((a, b) => pctNum(a.pass, a.n) - pctNum(b.pass, b.n));
+  makeChart('chart-rag-evals', {
+    type: 'bar',
+    data: { labels: stats.map(s => s.name), datasets: [{ label: t('rag.evals.label'), data: stats.map(s => pctNum(s.pass, s.n)), backgroundColor: RAG_BLUE, borderRadius: 4, maxBarThickness: 24 }] },
+    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false },
+               tooltip: { callbacks: { label: c => t('rag.evals.tooltip', { p: c.raw, a: stats[c.dataIndex].pass, b: stats[c.dataIndex].n }) } } },
+               scales: { x: { min: 0, max: 100, ticks: { callback: v => v + '%' } }, y: { grid: { display: false } } } }
+  });
+}
+
+function buildRagRuns() {
+  // Always all runs (within the period), so they can be compared side by side.
+  const excludeTesters = document.getElementById('exclude-testers').checked;
+  const all = GR.turns.filter(t => t.source === 'experiment' && !(excludeTesters && t.isTester) &&
+    (!globalDateFrom || t.time.substring(0, 10) >= globalDateFrom) && (!globalDateTo || t.time.substring(0, 10) <= globalDateTo));
+  const runs = [...new Set(all.map(t => t.run))].sort().reverse();
+  const evalNames = [...new Set(all.flatMap(t => Object.keys(t.evals)))].sort();
+  const rows = runs.map(run => {
+    const list = all.filter(t => t.run === run);
+    const facts = guardrailBuckets(list, 'facts');
+    const tops = list.filter(t => t.sections.length).map(t => t.sections[0][1]);
+    const med = median(tops);
+    return ['<span style="font-size:0.75rem;display:inline-block;min-width:260px">' + escapeHtml(run) + '</span>', nl(list.length),
+            pct(list.filter(t => t.outcome === 'answered').length, list.length),
+            facts.active ? pct(facts.pass, facts.active) : '–',
+            med === null ? '–' : med.toFixed(2),
+            ...evalNames.map(name => { const s = list.filter(t => name in t.evals); return s.length ? pct(s.filter(t => t.evals[name]).length, s.length) : '–'; })];
+  });
+  document.getElementById('rag-runs-table').innerHTML = ragTable(
+    [t('rag.runs.run'), t('rag.runs.turns'), t('rag.runs.answered'), t('rag.runs.facts'), t('rag.runs.median'), ...evalNames], rows);
+}
+
 // ========== GESPREKSLOGBOEK ==========
 function buildLog(convos) {
-  document.getElementById('total-convos-log').textContent = convos.length.toLocaleString('nl-NL');
+  document.getElementById('total-convos-log').textContent = convos.length.toLocaleString(loc());
 
   // Populate topic dropdown
   const topicSelect = document.getElementById('log-topic');
   const prevTopic = topicSelect.value;
-  topicSelect.innerHTML = '<option value="">Alle onderwerpen</option>';
+  topicSelect.innerHTML = '<option value="">' + t('log.allTopics') + '</option>';
   const topics = [...new Set(convos.map(c => c.topic))].sort();
   topics.forEach(t => {
     const opt = document.createElement('option');
@@ -1250,7 +1851,7 @@ function applyLogFilters(convos) {
     return tb.localeCompare(ta);
   });
 
-  document.getElementById('log-count').textContent = filteredConvos.length.toLocaleString('nl-NL') + ' gesprekken gevonden';
+  document.getElementById('log-count').textContent = t('log.found', { n: filteredConvos.length.toLocaleString(loc()) });
   renderPage();
 }
 
@@ -1281,25 +1882,25 @@ function updateSelectionBar() {
     if (c.hasError) errors++;
   });
   document.getElementById('sel-topics').textContent = Object.entries(topics).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => k + ': ' + v).join(', ');
-  document.getElementById('sel-turns').textContent = 'Gem. ' + (totalTurns / count).toFixed(1) + ' vragen';
-  document.getElementById('sel-errors').textContent = errors + ' fouten';
+  document.getElementById('sel-turns').textContent = t('log.avgQuestions', { n: (totalTurns / count).toFixed(1) });
+  document.getElementById('sel-errors').textContent = t('log.nErrors', { n: errors });
 }
 
 function clearSelection() { selectedConvos.clear(); updateSelectionBar(); renderPage(); }
 
 function exportSelection() {
   if (selectedConvos.size === 0) return;
-  let csv = 'Datum,Onderwerp,Vragen,Eerste vraag,Fout,Feedback\n';
+  let csv = [t('common.date'), t('common.topic'), t('common.questions'), t('common.firstQuestion'), t('common.error'), t('common.feedback')].join(',') + '\n';
   selectedConvos.forEach(idx => {
     const c = DATA.convLog[idx];
     csv += '"' + formatDateShort(c.time) + '","' + c.topic + '",' + c.turns + ',"' +
-      c.preview.replace(/"/g, '""') + '",' + (c.hasError ? 'Ja' : 'Nee') + ',"' +
+      c.preview.replace(/"/g, '""') + '",' + (c.hasError ? t('common.yes') : t('common.no')) + ',"' +
       ((c.feedbacks || []).join('; ')).replace(/"/g, '""') + '"\n';
   });
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'robin-selectie-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.download = t('log.csvFile') + '-' + new Date().toISOString().slice(0, 10) + '.csv';
   a.click();
 }
 
@@ -1322,7 +1923,7 @@ function renderPage() {
       '<td class="td-topic"><span class="topic-dot" style="background:' + topicColor(c.topic) + '"></span>' + escapeHtml(c.topic) + '</td>' +
       '<td class="td-turns">' + c.turns + '</td>' +
       '<td class="td-preview">' + escapeHtml(c.preview) + '</td>' +
-      '<td class="td-fout">' + (c.hasError ? '<span class="badge err">Fout</span>' : '<span class="dash">–</span>') + '</td>' +
+      '<td class="td-fout">' + (c.hasError ? '<span class="badge err">' + t('common.error') + '</span>' : '<span class="dash">–</span>') + '</td>' +
       '<td class="td-feedback">' + (c.feedbacks && c.feedbacks.length ? '<span class="badge fb">' + c.feedbacks.length + '</span>' : '<span class="dash">–</span>') + '</td>';
     tr.querySelector('input[type=checkbox]').addEventListener('click', e => {
       e.stopPropagation();
@@ -1344,11 +1945,11 @@ function renderPage() {
   const pag = document.getElementById('pagination');
   pag.innerHTML = '';
   if (totalPages <= 1) return;
-  if (currentPage > 0) { const btn = document.createElement('button'); btn.textContent = 'Vorige'; btn.addEventListener('click', () => { currentPage--; renderPage(); document.querySelector('.log-table-wrap').scrollTop = 0; }); pag.appendChild(btn); }
+  if (currentPage > 0) { const btn = document.createElement('button'); btn.textContent = t('log.prev'); btn.addEventListener('click', () => { currentPage--; renderPage(); document.querySelector('.log-table-wrap').scrollTop = 0; }); pag.appendChild(btn); }
   const span = document.createElement('span');
-  span.textContent = 'Pagina ' + (currentPage + 1) + ' van ' + totalPages;
+  span.textContent = t('log.page', { a: currentPage + 1, b: totalPages });
   pag.appendChild(span);
-  if (currentPage < totalPages - 1) { const btn = document.createElement('button'); btn.textContent = 'Volgende'; btn.addEventListener('click', () => { currentPage++; renderPage(); document.querySelector('.log-table-wrap').scrollTop = 0; }); pag.appendChild(btn); }
+  if (currentPage < totalPages - 1) { const btn = document.createElement('button'); btn.textContent = t('log.next'); btn.addEventListener('click', () => { currentPage++; renderPage(); document.querySelector('.log-table-wrap').scrollTop = 0; }); pag.appendChild(btn); }
 }
 
 // ========== HELPERS ==========
@@ -1371,12 +1972,14 @@ function kpiCard(value, label, sub, color) {
 }
 function formatDate(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleDateString(loc(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 function formatMonth(ym) {
   const [y, m] = ym.split('-');
-  return ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'][parseInt(m) - 1] + ' ' + y;
+  return t('months')[parseInt(m) - 1] + ' ' + y;
 }
+// The topic for unclassified conversations: "Other" from robin_adapter.py ("Overig" in older data).
+function isOtherTopic(topic) { return topic === 'Other' || topic === 'Overig'; }
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

@@ -22,6 +22,12 @@ Run from the repo root:
 ```
 This pulls fresh traces + feedback scores from Langfuse (environment `course`) and writes `dashboard-kit/dashboard-data.json`. Report how many conversations it built.
 
+Then refresh the data for the RAG & Guardrails tab:
+```bash
+.venv/Scripts/python.exe dashboard-kit/guardrails_adapter.py
+```
+This writes `dashboard-kit/guardrails-data.json`: one record per chat turn (course chats and experiment runs), with each guardrail's result, the look-up matches and the evaluator scores. It uses Langfuse's newer endpoints, so it keeps working if the deprecated ones `robin_adapter.py` uses are removed. If it fails, the rest of the dashboard still works; only that tab shows "Nog geen data".
+
 ## Step 3 — Start the server
 
 Check port 8080 isn't already serving the dashboard (`curl -s -m 3 http://localhost:8080/ -o /dev/null -w "%{http_code}"` — a 200 means it's already running, skip straight to Step 4). Otherwise start it in the background:
@@ -32,7 +38,7 @@ cd dashboard-kit && node server.js 8080
 
 ## Step 4 — Confirm and hand off
 
-Tell Maaike the dashboard is at **http://localhost:8080**, with tabs for Product Owner, Contentmanager, Technisch Beheer and Gesprekslogboek (conversation log — click any row to expand it inline with the assistant-ui thread view and the Bronnen/Beoordeling panel). She opens it herself; don't open the browser pane unless she asks to see it.
+Tell Maaike the dashboard is at **http://localhost:8080**, with tabs for Product Owner, Contentmanager, Technisch Beheer, RAG & Guardrails and Gesprekslogboek (conversation log — click any row to expand it inline with the assistant-ui thread view and the Bronnen/Beoordeling panel). She opens it herself; don't open the browser pane unless she asks to see it.
 
 ## Notes
 
